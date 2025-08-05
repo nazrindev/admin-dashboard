@@ -1,0 +1,16 @@
+<div class="flex justify-center mt-6 space-x-2 text-sm" *ngIf="totalPages > 1">
+    <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
+        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">
+        Previous
+    </button>
+
+    <button *ngFor="let page of pageNumbers" (click)="goToPage(page)" [class.bg-blue-600]="page === currentPage" [class.text-white]="page === currentPage" [class.bg-gray-200]="page !== currentPage" class="px-3 py-1 rounded hover:bg-blue-200">
+
+        {{ page }}
+    </button>
+
+    <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages"
+        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">
+        Next
+    </button>
+</div>
