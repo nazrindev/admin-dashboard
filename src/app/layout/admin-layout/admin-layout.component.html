@@ -1,0 +1,22 @@
+<div class="admin-layout">
+  <aside class="sidebar">
+    <nav>
+      <ul>
+        <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+        <li><a routerLink="/stores" routerLinkActive="active">Stores</a></li>
+        <li><a routerLink="/products" routerLinkActive="active">Products</a></li>
+        <li><a routerLink="/orders" routerLinkActive="active">Orders</a></li>
+        <li><a routerLink="/customers" routerLinkActive="active">Customers</a></li>
+        <li><a routerLink="/users" routerLinkActive="active">Users</a></li>
+        <li><a routerLink="/settings" routerLinkActive="active">Settings</a></li>
+      </ul>
+    </nav>
+    <div class="user-info">
+      <span *ngIf="currentUser$ | async as user">Welcome, {{ user.name }}</span>
+    </div>
+    <button class="logout-btn" (click)="logout()">Logout</button>
+  </aside>
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
