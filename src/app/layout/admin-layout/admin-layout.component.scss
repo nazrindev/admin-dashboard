@@ -4,9 +4,63 @@
   background: #f4f6fa;
 }
 
+/* Reusable icon styles */
+.dashboard-icon,
+.products-icon,
+.orders-icon,
+.settings-icon {
+  display: block;
+  width: 52px;
+  height: 52px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 80%; /* prevents cropping */
+  transition: transform 0.25s ease, filter 0.25s ease, box-shadow 0.25s ease;
+  border-radius: 12px;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover animation */
+.dashboard-icon:hover,
+.products-icon:hover,
+.orders-icon:hover,
+.settings-icon:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 6px 14px rgba(255, 255, 255, 0.4);
+}
+
+/* Active state */
+a.active.dashboard-icon,
+a.active.products-icon,
+a.active.orders-icon,
+a.active.settings-icon {
+  filter: brightness(1.3) drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
+  transform: scale(1.05);
+}
+
+/* Assign background images */
+.dashboard-icon {
+  background-image: url('/icons/dashboard.png');
+}
+
+.products-icon {
+  background-image: url('/icons/products.png');
+}
+
+.orders-icon {
+  background-image: url('/icons/orders.png');
+}
+
+.settings-icon {
+  background-image: url('/icons/settings.png');
+}
+
+/* Sidebar styling */
 .sidebar {
-  width: 240px;
-  background: linear-gradient(180deg, #232526 0%, #414345 100%);
+  width: 144px;
+  background: #FF8901;
   color: #fff;
   padding: 2rem 1rem;
   display: flex;
@@ -17,7 +71,7 @@
   left: 0;
   bottom: 0;
   z-index: 100;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.07);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.07);
 }
 
 .sidebar nav ul {
@@ -34,23 +88,42 @@
   margin-bottom: 0;
 }
 
-.sidebar nav ul li a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 1.1rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  display: block;
-  transition: background 0.2s, color 0.2s;
+/* Tooltip styling */
+.menu-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    left: 100%; /* to the right of icon */
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 8px;
+
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  &:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
 }
 
-.sidebar nav ul li a.active,
-.sidebar nav ul li a:hover {
-  background: #4f46e5;
-  color: #fff;
-}
-
+/* Logout button */
 .logout-btn {
   background: #e53e3e;
   color: #fff;
@@ -67,24 +140,21 @@
   background: #c53030;
 }
 
+/* Main content */
 .content {
   flex: 1;
-  margin-left: 240px;
+  margin-left: 144px;
   padding: 2.5rem 2rem;
   background: #f4f6fa;
   min-height: 100vh;
   transition: margin 0.3s;
 }
 
+/* RESPONSIVE */
 @media (max-width: 900px) {
   .sidebar {
     width: 70px;
     padding: 1rem 0.5rem;
-  }
-  .sidebar nav ul li a {
-    font-size: 0.9rem;
-    padding: 0.5rem 0.5rem;
-    text-align: center;
   }
   .content {
     margin-left: 70px;

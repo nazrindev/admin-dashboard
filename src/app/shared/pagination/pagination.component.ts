@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
@@ -5,6 +6,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   standalone: true,
   templateUrl: './pagination.component.html',
   styleUrls: ['./pagination.component.scss'],
+  imports: [CommonModule],
 })
 export class PaginationComponent {
   @Input() currentPage = 1;

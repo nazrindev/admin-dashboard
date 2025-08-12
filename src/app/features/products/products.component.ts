@@ -14,7 +14,12 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule , PaginationComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    PaginationComponent,
+  ],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss',
 })
@@ -22,17 +27,17 @@ export class ProductsComponent {
   products: any[] = [];
   categories: any[] = [];
   subcategories: any[] = [];
-
+  openAddCategoryPopup: boolean = false;
   popupImageUrl: string | null = null;
   openCreateModal = false;
-
+  searchTerm: String = '';
   productForm!: FormGroup;
+  categoryForm!: FormGroup;
   selectedImages: File[] = [];
   currentPage = 1;
-  itemsPerPage = 5;
+  itemsPerPage = 10;
 
   constructor(private http: HttpClient, private fb: FormBuilder) {}
-
 
   get paginatedProducts() {
     const start = (this.currentPage - 1) * this.itemsPerPage;
@@ -54,16 +59,28 @@ export class ProductsComponent {
       isActive: [true],
     });
 
+    this.categoryForm = this.fb.group({
+      name: [''],
+      slug: [''],
+      iconUrl: [''],
+      displayOrder: [0],
+      isActive: [true],
+      subCategoryName: [''],
+    });
+
     this.getProducts();
     this.getCategories();
     this.getSubcategories();
   }
 
   getProducts() {
+    const merchantId = localStorage.getItem('userId');
     this.http
-      .get<{ products: any[] }>(`${environment.apiUrl}/product/get`)
+      .get<{ product: any[] }>(
+        `${environment.apiUrl}/product/get/merchant/${merchantId}`
+      )
       .subscribe({
-        next: (res) => (this.products = res.products),
+        next: (res) => (this.products = res.product),
         error: (err) => console.error('Fetch failed:', err),
       });
   }
@@ -140,5 +157,61 @@ export class ProductsComponent {
         alert('Error creating product');
       },
     });
+  }
+  showAddCategoryPopup() {
+    this.openAddCategoryPopup = true;
+  }
+
+  submitCategoryForm() {
+    const { name, slug, iconUrl, displayOrder, isActive, subCategoryName } =
+      this.categoryForm.value;
+
+    const category: any = {
+      name,
+      slug,
+      iconUrl,
+      displayOrder,
+      isActive,
+    };
+    if (subCategoryName) {
+      category.subcategories = [{ name: subCategoryName }];
+    }
+
+    this.http
+      .post(`${environment.apiUrl}/category/create`, category)
+      .subscribe({
+        next: (response) => {
+          console.log('Category created:', response);
+          this.closeModal();
+        },
+        error: (err) => {
+          console.error('Error creating category:', err);
+        },
+      });
+  }
+
+  closeModal() {
+    this.openAddCategoryPopup = false;
+  }
+  searchProducts() {
+    const term = this.searchTerm.trim();
+    if (!term) {
+      this.products = [];
+      return;
+    }
+
+    this.http
+      .get(`${environment.apiUrl}/product/search`, {
+        params: { q: term },
+      })
+      .subscribe({
+        next: (response: any) => {
+          this.products = response.products;
+          console.log('Search results:', response);
+        },
+        error: (err) => {
+          console.error('Error searching products:', err);
+        },
+      });
   }
 }
