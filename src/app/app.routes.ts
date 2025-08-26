@@ -11,6 +11,7 @@ import { CustomersComponent } from './features/customers/customers.component';
 import { UsersComponent } from './features/users/users.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { authGuard } from './guards/auth.guard';
+import { AccountComponent } from './features/account/account.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -29,6 +30,7 @@ export const routes: Routes = [
       { path: 'customers', component: CustomersComponent },
       { path: 'users', component: UsersComponent },
       { path: 'settings', component: SettingsComponent },
+      { path: 'account', component: AccountComponent },
     ],
   },
 ];

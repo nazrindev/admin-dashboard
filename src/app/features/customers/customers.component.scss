@@ -1,1 +1,107 @@
-/* Customers styles placeholder */ 
+/* ===== Page container ===== */
+.customers-container {
+  padding: 2rem;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+.customers-container h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937; /* gray-800 */
+  margin-bottom: 1rem;
+}
+
+/* ===== Filters and create toggler ===== */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filters input {
+  width: 260px;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+  color: #111827; /* gray-900 */
+}
+
+.filters button {
+  padding: 0.5rem 0.875rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+}
+
+.filters button:hover { background: #1d4ed8; }
+
+/* ===== Create card ===== */
+.create-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.create-card form { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.create-card input {
+  flex: 1 1 200px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+}
+.create-card button {
+  padding: 0.5rem 0.9rem;
+  background: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+}
+.create-card button[disabled] { opacity: 0.6; }
+
+/* ===== Table ===== */
+.customers-table {
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.customers-table .table-header,
+.customers-table .table-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.customers-table .table-header {
+  padding: 0.75rem 1rem;
+  background: #f3f4f6; /* gray-100 */
+  color: #374151; /* gray-700 */
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.customers-table .table-row {
+  padding: 0.75rem 1rem;
+  color: #1f2937; /* gray-800 */
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.customers-table .table-row:hover { background: #f9fafb; } 
+
+.pager { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+.pager button { padding: 0.35rem 0.7rem; border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; border-radius: 6px; }
+.pager button[disabled] { opacity: 0.5; cursor: not-allowed; } 

@@ -2,29 +2,15 @@
 	<aside class="sidebar">
 
 		<div class="user-info">
-			<span *ngIf="currentUser$ | async as user">Welcome, {{ user.name }}</span>
+			<span>Welcome, {{ storeName }}</span>
 		</div>
 
-		<nav>
-			<ul>
-				<li class="menu-item">
-					<a routerLink="/dashboard" class="dashboard-icon"></a>
-					<span class="tooltip-text">Dashboard</span>
-				</li>
-				<li class="menu-item">
-					<a routerLink="/products" class="products-icon"></a>
-					<span class="tooltip-text">Products</span>
-				</li>
-				<li class="menu-item">
-					<a routerLink="/orders" class="orders-icon"></a>
-					<span class="tooltip-text">Orders</span>
-				</li>
-				<li class="menu-item">
-					<a routerLink="/settings" class="settings-icon"></a>
-					<span class="tooltip-text">Settings</span>
-				</li>
-
-			</ul>
+		<nav class="nav-list">
+			<a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+			<a routerLink="/products" routerLinkActive="active">Products</a>
+			<a routerLink="/orders" routerLinkActive="active">Orders</a>
+			<a routerLink="/customers" routerLinkActive="active">Customers</a>
+			<a routerLink="/settings" routerLinkActive="active">Settings</a>
 		</nav>
 
 		<button class="logout-btn" (click)="logout()">Logout</button>

@@ -1,2 +1,37 @@
-<h2>Customers</h2>
-<p>This is the Customers management page.</p> 
+<div class="customers-container">
+    <h2>Customers</h2>
+
+    <div class="filters">
+        <input placeholder="Store ID" [(ngModel)]="storeIdFilter" (keyup.enter)="applyFilters()" />
+        <button (click)="applyFilters()">Apply</button>
+        <button (click)="showCreate = !showCreate">{{ showCreate ? 'Close' : 'Add Customer' }}</button>
+    </div>
+
+    <div *ngIf="showCreate" class="create-card">
+        <form (ngSubmit)="createCustomer()">
+            <input name="name" [(ngModel)]="create.name" placeholder="Name" required />
+            <input name="email" [(ngModel)]="create.email" placeholder="Email" type="email" required />
+            <input name="phone" [(ngModel)]="create.phone" placeholder="Phone" />
+            <button type="submit" [disabled]="isCreating">{{ isCreating ? 'Creating...' : 'Create' }}</button>
+        </form>
+    </div>
+
+    <div class="customers-table">
+        <div class="table-header">
+            <div>Name</div>
+            <div>Email</div>
+            <div>Created</div>
+        </div>
+        <div class="table-row" *ngFor="let c of paginatedCustomers">
+            <div>{{ c.name }}</div>
+            <div>{{ c.email }}</div>
+            <div>{{ c.createdAt | date:'medium' }}</div>
+        </div>
+    </div>
+
+    <div class="pager">
+        <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1">Prev</button>
+        <span>Page {{ currentPage }}</span>
+        <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage * itemsPerPage >= total">Next</button>
+    </div>
+</div>

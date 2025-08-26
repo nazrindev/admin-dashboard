@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environment';
+import { FormsModule } from '@angular/forms';
+import { OrderService } from '../../services/order.service';
+import { AuthService, User } from '../../services/auth.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 
 @Component({
@@ -10,53 +10,82 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
   templateUrl: './orders.component.html',
   styleUrls: ['./orders.component.scss'],
   standalone: true,
-  imports: [CommonModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent],
 })
 export class OrdersComponent {
   orders: any[] = [];
   paginatedOrders: any[] = [];
+
+  statusFilter = '';
+  storeIdFilter = '';
   searchTerm = '';
 
   currentPage = 1;
   itemsPerPage = 10;
+  total = 0;
 
-  constructor(private http: HttpClient) {}
+  isLoading = false;
+
+  constructor(
+    private orderService: OrderService,
+    private authService: AuthService
+  ) {}
   ngOnInit() {
     this.getOrders();
   }
-  getOrders() {
-    this.http.get<any[]>(`${environment.apiUrl}/order/`).subscribe({
-      next: (data) => {
-        this.orders = data;
-        this.updatePagination();
-      },
-      error: (err) => console.error('Error fetching orders:', err),
-    });
+
+  private getMerchantId(): string | null {
+    const user: User | (User & { _id?: string }) | null =
+      this.authService.getCurrentUser() as any;
+    return (user as any)?._id || (user as any)?.id || null;
   }
 
-  searchOrders() {
-    const term = this.searchTerm.trim();
-    if (!term) {
-      this.getOrders();
-      return;
-    }
-
-    this.http
-      .get<any[]>(`${environment.apiUrl}/order/search`, {
-        params: { query: term },
+  getOrders() {
+    const merchantId = this.getMerchantId();
+    if (!merchantId) return;
+    this.isLoading = true;
+    this.orderService
+      .getOrders(merchantId, {
+        status: this.statusFilter || undefined,
+        storeId: this.storeIdFilter || undefined,
+        page: this.currentPage,
+        limit: this.itemsPerPage,
       })
       .subscribe({
-        next: (data) => {
-          this.orders = data;
+        next: (res) => {
+          this.orders = res?.orders || res?.data || [];
+          this.total = res?.total || this.orders.length;
           this.updatePagination();
+          this.isLoading = false;
         },
-        error: (err) => console.error('Error searching orders:', err),
+        error: (err) => {
+          console.error('Error fetching orders:', err);
+          this.isLoading = false;
+        },
       });
+  }
+
+  updateStatus(order: any, status: string) {
+    const merchantId = this.getMerchantId();
+    if (!merchantId) return;
+    this.orderService
+      .updateOrderStatus(order._id || order.id, merchantId, status)
+      .subscribe({
+        next: () => {
+          order.status = status;
+        },
+        error: (err) => console.error('Failed to update status', err),
+      });
+  }
+
+  applyFilters() {
+    this.currentPage = 1;
+    this.getOrders();
   }
 
   onPageChange(page: number) {
     this.currentPage = page;
-    this.updatePagination();
+    this.getOrders();
   }
 
   updatePagination() {
