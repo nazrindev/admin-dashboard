@@ -1,50 +1,57 @@
-<div class="p-8 bg-gray-50 min-h-screen">
-    <h2 class="text-3xl font-semibold text-gray-800 mb-6">Orders Management</h2>
+<div class="page-container">
+    <h2 class="page-title">Orders</h2>
 
-    <!-- Search -->
-    <div class="search-container mb-4">
-        <input type="text" placeholder="Search orders...">
-        <button class="search" (click)="searchOrders()">Search</button>
-        <button class="cancel" (click)="getOrders()">Cancel</button>
+    <div class="search-container">
+        <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="returned">Returned</option>
+        </select>
+        <input type="text" placeholder="Store ID" [(ngModel)]="storeIdFilter" (keyup.enter)="applyFilters()" />
+        <button class="search" (click)="applyFilters()">Apply</button>
     </div>
 
-    <!-- Orders Table -->
-    <!-- Orders Table -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded shadow-md" *ngIf="paginatedOrders.length > 0; else noOrders">
-            <thead class="bg-gray-100 text-left text-sm font-semibold text-gray-600">
+    <ng-container *ngIf="paginatedOrders?.length; else noOrders">
+        <table>
+            <thead>
                 <tr>
-                    <th class="py-3 px-6">Order ID</th>
-                    <th class="py-3 px-6">Customer</th>
-                    <th class="py-3 px-6">Total</th>
-                    <th class="py-3 px-6">Status</th>
-                    <th class="py-3 px-6">Payment</th>
-                    <th class="py-3 px-6">Date</th>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
-                <tr class="hover:bg-gray-50" *ngFor="let order of paginatedOrders">
-                    <td class="py-3 px-6">{{ order._id }}</td>
-                    <td class="py-3 px-6">{{ order.customer?.name || '—' }}</td>
-                    <td class="py-3 px-6">{{ order.totalAmount | currency }}</td>
-                    <td class="py-3 px-6 capitalize">{{ order.status }}</td>
-                    <td class="py-3 px-6 capitalize">{{ order.paymentStatus }}</td>
-                    <td class="py-3 px-6">{{ order.createdAt | date:'short' }}</td>
+            <tbody>
+                <tr *ngFor="let o of paginatedOrders">
+                    <td>#{{ o.orderNumber }}</td>
+                    <td>{{ o.customer?.name || 'Guest' }}</td>
+                    <td>{{ o.createdAt | date:'medium' }}</td>
+                    <td>{{ o.total | currency:'USD':'symbol':'1.0-0' }}</td>
+                    <td><span class="badge badge--{{ o.status }}">{{ o.status }}</span></td>
+                    <td>
+                        <div class="row-actions">
+                            <button (click)="updateStatus(o, 'pending')">Pending</button>
+                            <button (click)="updateStatus(o, 'processing')">Processing</button>
+                            <button (click)="updateStatus(o, 'shipped')">Shipped</button>
+                            <button (click)="updateStatus(o, 'delivered')">Delivered</button>
+                            <button (click)="updateStatus(o, 'cancelled')">Cancelled</button>
+                            <button (click)="updateStatus(o, 'returned')">Returned</button>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
+    </ng-container>
+    <ng-template #noOrders>
+        <div class="no-orders">No orders found.</div>
+    </ng-template>
 
-        <!-- No orders template -->
-        <ng-template #noOrders>
-            <div class="text-center py-10 text-gray-500 text-lg">
-                📦 No orders found
-            </div>
-        </ng-template>
-    </div>
-
-
-    <!-- Pagination -->
-    <app-pagination [currentPage]="currentPage" [itemsPerPage]="itemsPerPage" [totalItems]="orders.length"
-        (pageChange)="onPageChange($event)">
-    </app-pagination>
+    <app-pagination [currentPage]="currentPage" [itemsPerPage]="itemsPerPage" [totalItems]="total"
+        (pageChange)="onPageChange($event)"></app-pagination>
 </div>

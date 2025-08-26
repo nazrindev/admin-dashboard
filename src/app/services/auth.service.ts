@@ -17,7 +17,7 @@ export interface LoginResponse {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -30,7 +30,7 @@ export class AuthService {
   private loadUserFromStorage(): void {
     const token = localStorage.getItem('authToken');
     const userStr = localStorage.getItem('user');
-    
+
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -43,9 +43,10 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${environment.apiUrl}/merchant/login`, {
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/api/merchant`, {
+      action: 'login',
       email,
-      password
+      password,
     });
   }
 
@@ -72,4 +73,4 @@ export class AuthService {
     localStorage.setItem('user', JSON.stringify(user));
     this.currentUserSubject.next(user);
   }
-} 
+}

@@ -36,42 +36,87 @@ export interface CreateSubcategoryRequest {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CategoryService {
   constructor(private http: HttpClient) {}
 
   // Category APIs
-  createCategory(data: CreateCategoryRequest): Observable<{ message: string; category: Category }> {
-    return this.http.post<{ message: string; category: Category }>(`${environment.apiUrl}/category/create`, data);
+  createCategory(
+    data: CreateCategoryRequest
+  ): Observable<{ message: string; category: Category }> {
+    return this.http.post<{ message: string; category: Category }>(
+      `${environment.apiUrl}/api/category`,
+      data
+    );
   }
 
   getCategories(): Observable<{ categories: Category[] }> {
-    return this.http.get<{ categories: Category[] }>(`${environment.apiUrl}/category/get`);
+    return this.http.get<{ categories: Category[] }>(
+      `${environment.apiUrl}/api/category/get`
+    );
   }
 
-  updateCategory(id: string, data: Partial<CreateCategoryRequest>): Observable<{ message: string; category: Category }> {
-    return this.http.put<{ message: string; category: Category }>(`${environment.apiUrl}/category/update/${id}`, data);
+  updateCategory(
+    id: string,
+    data: Partial<CreateCategoryRequest>
+  ): Observable<{ message: string; category: Category }> {
+    return this.http.put<{ message: string; category: Category }>(
+      `${environment.apiUrl}/category/update/${id}`,
+      data
+    );
   }
 
   deleteCategory(id: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${environment.apiUrl}/category/delete/${id}`);
+    return this.http.delete<{ message: string }>(
+      `${environment.apiUrl}/category/delete/${id}`
+    );
   }
 
   // Subcategory APIs
-  createSubcategory(data: CreateSubcategoryRequest): Observable<{ message: string; subcategory: Subcategory }> {
-    return this.http.post<{ message: string; subcategory: Subcategory }>(`${environment.apiUrl}/subcategory/create`, data);
+  createSubcategory(
+    data: CreateSubcategoryRequest
+  ): Observable<{ message: string; subcategory: Subcategory }> {
+    return this.http.post<{ message: string; subcategory: Subcategory }>(
+      `${environment.apiUrl}/api/subcategory`,
+      data
+    );
   }
 
   getSubcategories(): Observable<{ subcategory: Subcategory[] }> {
-    return this.http.get<{ subcategory: Subcategory[] }>(`${environment.apiUrl}/subcategory/get`);
+    return this.http.get<{ subcategory: Subcategory[] }>(
+      `${environment.apiUrl}/api/subcategory/get`
+    );
   }
 
-  updateSubcategory(id: string, data: Partial<CreateSubcategoryRequest>): Observable<{ message: string; subcategory: Subcategory }> {
-    return this.http.put<{ message: string; subcategory: Subcategory }>(`${environment.apiUrl}/subcategory/update/${id}`, data);
+  updateSubcategory(
+    id: string,
+    data: Partial<CreateSubcategoryRequest>
+  ): Observable<{ message: string; subcategory: Subcategory }> {
+    return this.http.put<{ message: string; subcategory: Subcategory }>(
+      `${environment.apiUrl}/subcategory/update/${id}`,
+      data
+    );
   }
 
   deleteSubcategory(id: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${environment.apiUrl}/subcategory/delete/${id}`);
+    return this.http.delete<{ message: string }>(
+      `${environment.apiUrl}/subcategory/delete/${id}`
+    );
   }
-} 
+
+  // New endpoints per spec
+  getCategoryById(id: string): Observable<{ category: Category }> {
+    return this.http.get<{ category: Category }>(
+      `${environment.apiUrl}/api/category/${id}`
+    );
+  }
+
+  getSubcategoriesByCategoryId(
+    id: string
+  ): Observable<{ subcategories: Subcategory[] }> {
+    return this.http.get<{ subcategories: Subcategory[] }>(
+      `${environment.apiUrl}/api/category/${id}/subcategories`
+    );
+  }
+}
