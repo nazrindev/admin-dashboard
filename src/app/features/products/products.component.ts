@@ -25,34 +25,40 @@ import { firstValueFrom } from 'rxjs';
     PaginationComponent,
   ],
   templateUrl: './products.component.html',
-  styleUrl: './products.component.scss',
+  styleUrls: ['./products.component.scss'],
 })
 export class ProductsComponent {
+  // Form and data
+  productForm!: FormGroup;
   products: any[] = [];
   categories: any[] = [];
   subcategories: any[] = [];
-  openAddCategoryPopup: boolean = false;
-  popupImageUrl: string | null = null;
-  openCreateModal = false;
-  searchTerm: String = '';
-  productForm!: FormGroup;
-  categoryForm!: FormGroup;
-  selectedImages: File[] = [];
+
+  // Pagination
   currentPage = 1;
+  totalItems = 0;
+  totalPages = 1;
   itemsPerPage = 10;
+  searchTerm = '';
+
+  // UI state
+  isCreatePopupOpen = false;
+  isEditPopupOpen = false;
   isSubmitting = false;
-
-  // Inline create inputs
-  newCategoryName = '';
-  newSubcategoryName = '';
-  existingImageUrls = '';
-
-  // preserve original images on edit
-  private editingOriginalImageUrls: string[] = [];
+  selectedProduct: any = null;
 
   // UI messages
   successMessage: string | null = null;
   errorMessage: string | null = null;
+
+  // UI State
+  showAdvancedOptions = false;
+  openCreateModal = false;
+  popupImageUrl: string | null = null;
+
+  // File upload state
+  selectedImages: File[] = [];
+  previewUrls: string[] = [];
 
   constructor(
     private http: HttpClient,
@@ -66,65 +72,43 @@ export class ProductsComponent {
     this.successMessage = msg;
     this.errorMessage = null;
     setTimeout(() => {
-      if (this.successMessage === msg) this.successMessage = null;
+      this.successMessage = null;
     }, 3000);
   }
+
   private setError(msg: string) {
     this.errorMessage = msg;
     this.successMessage = null;
-  }
-
-  get paginatedProducts() {
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    return this.products.slice(start, start + this.itemsPerPage);
-  }
-
-  onPageChange(page: number) {
-    this.currentPage = page;
+    setTimeout(() => {
+      this.errorMessage = null;
+    }, 5000);
   }
 
   ngOnInit() {
     this.productForm = this.fb.group({
       categoryId: [''],
-      subcategoryId: [''],
-      storeId: [''],
       name: ['', Validators.required],
       description: [''],
       price: ['', Validators.required],
-      stock: ['0', Validators.min(0)],
+      stock: ['1', Validators.min(1)],
       isActive: [true],
 
-      brand: [''],
+      // Additional fields for complete payload
       sku: [''],
-      color: [''],
-      sizes: [''],
+      brand: [''],
+      gender: [''],
       material: [''],
       occasion: [''],
-      gender: [''],
-      careInstructions: [''],
+      sizes: [''],
+      color: [''], // Changed from 'colors'
       tags: [''],
+      imageUrls: [''], // Field for image URLs
     });
 
-    this.categoryForm = this.fb.group({
-      name: [''],
-      slug: [''],
-      iconUrl: [''],
-      displayOrder: [0],
-      isActive: [true],
-      subCategoryName: [''],
-    });
-
-    this.productForm.get('categoryId')?.valueChanges.subscribe((id: string) => {
-      if (!id) {
-        this.subcategories = [];
-        return;
-      }
-      this.loadSubcategoriesForCategory(id);
-    });
+    // Simplified form - no subcategory handling needed
 
     this.getProducts();
     this.getCategories();
-    this.getSubcategories();
   }
 
   private getMerchantId(): string | null {
@@ -136,314 +120,337 @@ export class ProductsComponent {
   getProducts() {
     const merchantId = this.getMerchantId();
     if (!merchantId) return;
-    this.productService.getProducts(merchantId).subscribe({
-      next: (res) => (this.products = res?.products || res?.product || []),
-      error: (err) => console.error('Fetch failed:', err),
-    });
+
+    this.productService
+      .getProducts(
+        merchantId,
+        this.currentPage,
+        this.itemsPerPage,
+        this.searchTerm.toString()
+      )
+      .subscribe({
+        next: (res) => {
+          // Try different possible response structures
+          this.products =
+            res?.products ||
+            res?.product ||
+            res?.data?.products ||
+            res?.data?.product ||
+            [];
+
+          // Handle pagination data - try different possible structures
+          const pagination =
+            res?.pagination ||
+            res?.meta ||
+            res?.data?.pagination ||
+            res?.data?.meta;
+
+          if (pagination) {
+            this.currentPage = pagination.page || pagination.currentPage || 1;
+            this.totalItems =
+              pagination.total ||
+              pagination.totalItems ||
+              pagination.count ||
+              0;
+            this.totalPages =
+              pagination.pages ||
+              pagination.totalPages ||
+              Math.ceil(this.totalItems / this.itemsPerPage) ||
+              1;
+            this.itemsPerPage =
+              pagination.limit ||
+              pagination.itemsPerPage ||
+              pagination.perPage ||
+              10;
+          }
+        },
+        error: (err) => console.error('Fetch failed:', err),
+      });
   }
 
   getCategories() {
-    this.categoryApi
-      .getCategories()
-      .subscribe((res) => (this.categories = res.categories || []));
+    this.categoryApi.getCategories().subscribe({
+      next: (res) => {
+        this.categories = res?.categories || [];
+      },
+      error: (err) => {
+        console.error('Failed to load categories', err);
+      },
+    });
   }
 
   getSubcategories() {
-    this.categoryApi
-      .getSubcategories()
-      .subscribe((res) => (this.subcategories = res.subcategory || []));
-  }
-
-  private loadSubcategoriesForCategory(id: string) {
-    this.categoryApi.getSubcategoriesByCategoryId(id).subscribe({
-      next: (res) => {
-        this.subcategories = res?.subcategories || [];
-      },
-      error: (err) =>
-        console.error('Failed to load subcategories for category', err),
-    });
+    // Simplified - no subcategory handling needed
   }
 
   openCreatePopup() {
     this.productForm.reset({
-      stock: 0,
+      stock: 1, // Default stock to 1
       isActive: true,
+      sku: this.generateUniqueSku(), // Generate unique SKU
     });
-    this.newCategoryName = '';
-    this.newSubcategoryName = '';
-    this.existingImageUrls = '';
+    this.showAdvancedOptions = false;
     this.selectedImages = [];
+    this.previewUrls = [];
+    this.isCreatePopupOpen = true;
     this.openCreateModal = true;
   }
 
   openEditPopup(product: any) {
-    this.openCreateModal = true;
+    this.selectedProduct = product;
     this.productForm.patchValue({
-      categoryId: product.categoryId || product.category?._id || '',
-      subcategoryId: product.subcategoryId || product.subcategory?._id || '',
-      storeId: product.storeId || '',
-      name: product.name || '',
-      description: product.description || '',
-      price: product.price || 0,
-      stock: product.stock ?? 0,
-      isActive: !!product.isActive,
-      brand: product.brand || '',
-      sku: product.sku || '',
-      color: Array.isArray(product.color)
-        ? product.color.join(', ')
-        : product.color || '',
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      categoryId: product.categoryId,
+      isActive: product.isActive,
+      sku: product.sku,
+      brand: product.brand,
+      gender: product.gender,
+      material: product.material,
+      occasion: product.occasion,
       sizes: Array.isArray(product.sizes)
         ? product.sizes.join(', ')
-        : product.sizes || '',
-      material: product.material || '',
-      occasion: product.occasion || '',
-      gender: product.gender || '',
-      careInstructions: product.careInstructions || '',
+        : product.sizes,
+      color: Array.isArray(product.color)
+        ? product.color.join(', ')
+        : product.color,
       tags: Array.isArray(product.tags)
         ? product.tags.join(', ')
-        : product.tags || '',
+        : product.tags,
+      imageUrls: Array.isArray(product.imageUrls)
+        ? product.imageUrls.join(', ')
+        : product.imageUrls,
     });
-    (this.productForm as any)._editingId = product._id || product.id;
-    this.newCategoryName = '';
-    this.newSubcategoryName = '';
-    this.editingOriginalImageUrls = Array.isArray(product.imageUrls)
-      ? product.imageUrls.slice()
-      : [];
-    this.existingImageUrls = this.editingOriginalImageUrls.length
-      ? this.editingOriginalImageUrls.join(', ')
-      : '';
-    this.selectedImages = [];
+    this.isEditPopupOpen = true;
   }
 
   closeCreatePopup() {
+    this.isCreatePopupOpen = false;
     this.openCreateModal = false;
-    (this.productForm as any)._editingId = undefined;
+    this.productForm.reset();
+    this.selectedImages = [];
+    this.previewUrls = [];
   }
 
-  deleteProduct(product: any) {
-    const merchantId = this.getMerchantId();
-    if (!merchantId) return;
-    if (!confirm('Delete this product?')) return;
-    this.productService.deleteProduct(product._id || product.id).subscribe({
-      next: () => {
-        this.getProducts();
-      },
-      error: (err) => console.error('Delete failed', err),
-    });
+  closeEditPopup() {
+    this.isEditPopupOpen = false;
+    this.selectedProduct = null;
   }
 
-  // Helper: convert selected files to images payload
-  private async filesToImagesPayload(files: File[]): Promise<any[]> {
-    const readers = files.map(
-      (file) =>
-        new Promise<{ data: string; fileName: string }>((resolve, reject) => {
-          const fr = new FileReader();
-          fr.onerror = () => reject(new Error('Failed to read file'));
-          fr.onload = () =>
-            resolve({ data: String(fr.result), fileName: file.name });
-          fr.readAsDataURL(file);
-        })
-    );
-    return Promise.all(readers);
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.getProducts();
+  }
+
+  onSearch() {
+    this.currentPage = 1; // Reset to first page when searching
+    this.getProducts();
+  }
+
+  searchProducts() {
+    this.onSearch();
+  }
+
+  generateUniqueSku(): string {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `SKU-${timestamp}-${random}`;
   }
 
   async submitProduct() {
     if (this.productForm.invalid) {
-      this.setError('Please fill in all required fields.');
+      this.setError('Please fill in all required fields');
       return;
     }
+
     this.isSubmitting = true;
-
     const formValue = this.productForm.value;
-    let categoryId: string | null = formValue.categoryId || null;
 
-    // If user typed a new category, create it first
     try {
-      if (!categoryId && this.newCategoryName.trim()) {
-        const created = await firstValueFrom(
-          this.categoryApi.createCategory({
-            name: this.newCategoryName.trim(),
-            isActive: true,
-          })
-        );
-        categoryId = created?.category?._id || categoryId;
-      }
-
-      // If user typed a new subcategory, create it once we have a categoryId
-      let subcategoryId: string | null = formValue.subcategoryId || null;
-      if (this.newSubcategoryName.trim()) {
-        if (!categoryId) {
-          this.isSubmitting = false;
-          this.setError(
-            'Please select or create a category before adding a subcategory.'
-          );
-          return;
-        }
-        const createdSub = await firstValueFrom(
-          this.categoryApi.createSubcategory({
-            name: this.newSubcategoryName.trim(),
-            categoryId: categoryId as string,
-            isActive: true,
-          })
-        );
-        subcategoryId = createdSub?.subcategory?._id || subcategoryId;
-      }
-
-      // Prepare images
-      const existingUrls = String(this.existingImageUrls || '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => !!s);
-      const images = this.selectedImages.length
-        ? await this.filesToImagesPayload(this.selectedImages)
-        : [];
-
-      // Construct payload in JSON
-      const payload: any = {
-        name: formValue.name,
-        sku: formValue.sku || undefined,
-        price: Number(formValue.price),
-        stock: Number(formValue.stock),
-        categoryId: categoryId,
-        subcategoryId: subcategoryId || undefined,
-        storeId: formValue.storeId || undefined,
-        brand: formValue.brand || undefined,
-        description: formValue.description,
-        gender: formValue.gender || undefined,
-        sizes: formValue.sizes
-          ? String(formValue.sizes)
-              .split(',')
-              .map((s: string) => s.trim())
-          : undefined,
-        color: formValue.color
-          ? String(formValue.color)
-              .split(',')
-              .map((s: string) => s.trim())
-          : undefined,
-        material: formValue.material || undefined,
-        occasion: formValue.occasion || undefined,
-        tags: formValue.tags
-          ? String(formValue.tags)
-              .split(',')
-              .map((s: string) => s.trim())
-          : undefined,
-        isActive: !!formValue.isActive,
-        imageUrls: undefined as any,
-      };
-
-      // Build imageUrls: keep existing/old + new uploads as data URLs
-      const uploadedDataUrls = images.map((i) => i.data);
-      if (existingUrls.length) {
-        payload.imageUrls = existingUrls.concat(uploadedDataUrls);
-      } else if (
-        (this.productForm as any)._editingId &&
-        this.editingOriginalImageUrls.length
-      ) {
-        payload.imageUrls =
-          this.editingOriginalImageUrls.concat(uploadedDataUrls);
-      } else if (uploadedDataUrls.length) {
-        payload.imageUrls = uploadedDataUrls;
-      } else {
-        delete payload.imageUrls;
-      }
-
       const merchantId = this.getMerchantId();
       if (!merchantId) {
-        this.isSubmitting = false;
-        this.setError('No merchant logged in');
+        this.setError('Merchant ID not found');
         return;
       }
 
-      const editingId = (this.productForm as any)._editingId as
-        | string
-        | undefined;
-      const request$ = editingId
-        ? this.productService.updateProduct(editingId, payload)
-        : this.productService.createProduct(merchantId, payload);
+      // Find category ID
+      const categoryId = formValue.categoryId;
 
-      await firstValueFrom(request$);
+      // Build FormData with files and all product data
+      const formData = new FormData();
 
-      this.isSubmitting = false;
-      this.setSuccess(
-        editingId
-          ? 'Product updated successfully'
-          : 'Product created successfully'
+      // Add all text fields
+      formData.append('name', formValue.name);
+      formData.append('price', String(Number(formValue.price)));
+      formData.append('stock', String(Number(formValue.stock)));
+      formData.append('categoryId', categoryId || '');
+      formData.append('storeId', merchantId);
+      formData.append('isActive', String(!!formValue.isActive));
+
+      // Add optional text fields
+      if (formValue.sku) formData.append('sku', formValue.sku);
+      if (formValue.description)
+        formData.append('description', formValue.description);
+      if (formValue.brand) formData.append('brand', formValue.brand);
+      if (formValue.gender) formData.append('gender', formValue.gender);
+      if (formValue.material) formData.append('material', formValue.material);
+      if (formValue.occasion) formData.append('occasion', formValue.occasion);
+
+      // Handle arrays - convert to JSON strings
+      if (formValue.sizes) {
+        const sizesArray = String(formValue.sizes)
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s) => s.length > 0);
+        if (sizesArray.length > 0) {
+          formData.append('sizes', JSON.stringify(sizesArray));
+        }
+      }
+      if (formValue.color) {
+        const colorsArray = String(formValue.color)
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s) => s.length > 0);
+        if (colorsArray.length > 0) {
+          formData.append('color', JSON.stringify(colorsArray));
+        }
+      }
+      if (formValue.tags) {
+        const tagsArray = String(formValue.tags)
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s) => s.length > 0);
+        if (tagsArray.length > 0) {
+          formData.append('tags', JSON.stringify(tagsArray));
+        }
+      }
+
+      // Add image files under 'imageUrls' key (backend expects this field name)
+      this.selectedImages.forEach((file) => {
+        formData.append('imageUrls', file);
+      });
+
+      // Add any manually entered image URLs as strings
+      if (formValue.imageUrls) {
+        const manualUrls = String(formValue.imageUrls)
+          .split(',')
+          .map((url: string) => url.trim())
+          .filter((url: string) => url.length > 0);
+        manualUrls.forEach((url) => {
+          formData.append('imageUrls', url);
+        });
+      }
+
+      // Send FormData to product API (browser sets multipart/form-data automatically)
+      const response = await firstValueFrom(
+        this.http.post<any>(
+          `${environment.apiUrl}/api/merchant/${merchantId}/products`,
+          formData
+          // No Content-Type header - let browser set multipart/form-data
+        )
       );
-      this.getProducts();
-      this.closeCreatePopup();
+
+      if (response.success) {
+        this.setSuccess('Product created successfully!');
+        this.getProducts();
+        this.closeCreatePopup();
+      } else {
+        this.setError(response.message || 'Failed to create product');
+      }
     } catch (err: any) {
-      this.isSubmitting = false;
-      const apiMsg = err?.error?.message || 'Error saving product';
-      this.setError(apiMsg);
       console.error('Save failed:', err);
+      this.setError(err.error?.message || 'Failed to create product');
+    } finally {
+      this.isSubmitting = false;
     }
   }
 
-  saveStock(product: any) {
-    const merchantId = this.getMerchantId();
-    if (!merchantId) return;
-    const stock = Number(product.stock) || 0;
+  updateStock(product: any, newStock: number) {
     this.productService
-      .updateStock(merchantId, product._id || product.id, stock)
+      .updateProduct(product._id, { stock: newStock })
       .subscribe({
         next: () => {
-          this.setSuccess('Stock updated');
+          this.setSuccess('Stock updated successfully');
+          this.getProducts();
         },
-        error: (err) => {
+        error: (err: any) => {
           this.setError('Update stock failed');
           console.error('Update stock failed', err);
         },
       });
   }
 
-  saveActive(product: any) {
-    const merchantId = this.getMerchantId();
-    if (!merchantId) return;
-    this.productService
-      .updateProduct(product._id || product.id, {
-        isActive: !!product.isActive,
-      })
-      .subscribe({
+  updateStatus(product: any, isActive: boolean) {
+    this.productService.updateProduct(product._id, { isActive }).subscribe({
+      next: () => {
+        this.setSuccess('Status updated successfully');
+        this.getProducts();
+      },
+      error: (err: any) => {
+        this.setError('Update status failed');
+        console.error('Update active failed', err);
+      },
+    });
+  }
+
+  deleteProduct(product: any) {
+    if (confirm('Are you sure you want to delete this product?')) {
+      this.productService.deleteProduct(product._id || product.id).subscribe({
         next: () => {
-          this.setSuccess('Status updated');
+          this.getProducts();
         },
-        error: (err) => {
-          this.setError('Update status failed');
-          console.error('Update active failed', err);
-        },
+        error: (err) => console.error('Delete failed', err),
       });
-  }
-
-  searchProducts() {
-    const term = String(this.searchTerm || '').trim();
-    if (!term) {
-      this.getProducts();
-      return;
     }
-    this.http
-      .get(`${environment.apiUrl}/product/search`, { params: { q: term } })
-      .subscribe({
-        next: (response: any) => {
-          this.products = response.products || [];
-        },
-        error: (err) => console.error('Error searching products:', err),
-      });
   }
 
-  openImagePopup(url: string | null | undefined) {
-    if (!url) return;
-    this.popupImageUrl = url;
+  openImagePopup(imageUrl: string) {
+    this.popupImageUrl = imageUrl;
   }
 
   closeImagePopup() {
     this.popupImageUrl = null;
   }
 
-  onImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files) {
-      this.selectedImages = Array.from(input.files);
-    }
+  saveStock(product: any) {
+    this.updateStock(product, product.stock);
+  }
+
+  saveActive(product: any) {
+    this.updateStatus(product, product.isActive);
+  }
+
+  // AI methods - all removed/disabled
+  applyAiSuggestions(): void {
+    // AI functionality removed
+    return;
+  }
+
+  dismissAiSuggestions(): void {
+    // AI functionality removed
+    return;
+  }
+
+  analyzeProductImageManually(): void {
+    // AI functionality removed
+    return;
+  }
+
+  async analyzeWithGemini(): Promise<void> {
+    // AI functionality removed
+    return;
+  }
+
+  async analyzeImageUrls(): Promise<void> {
+    // AI functionality removed
+    return;
+  }
+
+  async useFallbackAnalysis(): Promise<void> {
+    // AI functionality removed
+    return;
   }
 
   removeImage(file: File) {
@@ -451,5 +458,52 @@ export class ProductsComponent {
       (f) =>
         f.name !== file.name || f.size !== file.size || f.type !== file.type
     );
+    this.previewUrls = this.previewUrls.filter((_, index) => {
+      const fileToCheck = this.selectedImages[index];
+      return (
+        fileToCheck &&
+        (fileToCheck.name !== file.name ||
+          fileToCheck.size !== file.size ||
+          fileToCheck.type !== file.type)
+      );
+    });
+  }
+
+  onImageSelected(event: any) {
+    const files = Array.from(event.target.files) as File[];
+    this.processFiles(files);
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    const files = Array.from(event.dataTransfer?.files || []);
+    this.processFiles(files);
+  }
+
+  private processFiles(files: File[]) {
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      this.setError('Please select only image files');
+      return;
+    }
+
+    this.selectedImages = [...this.selectedImages, ...imageFiles];
+    this.previewUrls = this.selectedImages.map((file) => {
+      return URL.createObjectURL(file);
+    });
+
+    this.setSuccess(`${imageFiles.length} image(s) selected successfully!`);
   }
 }

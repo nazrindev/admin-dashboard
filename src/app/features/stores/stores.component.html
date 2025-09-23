@@ -1,1 +1,97 @@
-<h2>Stores Management</h2>
+<div class="stores-container">
+    <!-- Success/Error Messages -->
+    <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <h2>Store Management</h2>
+        <p class="page-description">Manage your stores and featured status</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading stores...</p>
+    </div>
+
+    <!-- Stores List -->
+    <div *ngIf="!loading && stores && stores.length > 0" class="stores-grid">
+        <div *ngFor="let store of stores" class="store-card" [class.featured]="store.featured"
+            [class.expired]="isFeaturedExpired(store)">
+            <!-- Store Header -->
+            <div class="store-header">
+                <div class="store-logo">
+                    <img [src]="store.logo || 'assets/placeholder-store.png'" [alt]="store.businessName" />
+                </div>
+                <div class="store-info">
+                    <h3>{{ store.businessName }}</h3>
+                    <p class="store-type">{{ store.type || 'General Store' }}</p>
+                    <div class="store-badges">
+                        <span *ngIf="store.verified" class="badge verified">Verified</span>
+                        <span *ngIf="store.featured" class="badge featured" [class.expired]="isFeaturedExpired(store)">
+                            {{ isFeaturedExpired(store) ? 'Featured (Expired)' : 'Featured' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Store Details -->
+            <div class="store-details">
+                <div class="detail-row">
+                    <span class="label">Address:</span>
+                    <span class="value">{{ store.address || 'Not provided' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Phone:</span>
+                    <span class="value">{{ store.phone || 'Not provided' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Rating:</span>
+                    <span class="value">{{ store.rating }}/5 ⭐</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Delivery:</span>
+                    <span class="value">
+                        <span *ngIf="store.supportDelivery" class="delivery-option">Home Delivery</span>
+                        <span *ngIf="store.sameDayDelivery" class="delivery-option">Same Day</span>
+                        <span *ngIf="!store.supportDelivery && !store.sameDayDelivery">Not Available</span>
+                    </span>
+                </div>
+                <div *ngIf="store.featured && store.featuredExpiry" class="detail-row">
+                    <span class="label">Featured Until:</span>
+                    <span class="value" [class.expired]="isFeaturedExpired(store)">
+                        {{ formatDate(store.featuredExpiry) }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Store Status Display -->
+            <div class="store-status">
+                <div class="status-display" [class.featured]="store.featured"
+                    [class.expired]="isFeaturedExpired(store)">
+                    <span *ngIf="!store.featured" class="status-text">Not Featured</span>
+                    <span *ngIf="store.featured && !isFeaturedExpired(store)" class="status-text">Featured</span>
+                    <span *ngIf="store.featured && isFeaturedExpired(store)" class="status-text">Featured
+                        (Expired)</span>
+                </div>
+                <div *ngIf="store.featured && store.featuredExpiry" class="expiry-info">
+                    <small>Expires: {{ formatDate(store.featuredExpiry) }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && (!stores || stores.length === 0)" class="empty-state">
+        <div class="empty-icon">🏪</div>
+        <h3>No stores found</h3>
+        <p>You haven't created any stores yet.</p>
+    </div>
+</div>
+
+<!-- Approval functionality moved to super admin panel -->

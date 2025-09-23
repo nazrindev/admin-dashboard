@@ -4,7 +4,9 @@
         Previous
     </button>
 
-    <button *ngFor="let page of pageNumbers" (click)="goToPage(page)" [class.bg-blue-600]="page === currentPage" [class.text-white]="page === currentPage" [class.bg-gray-200]="page !== currentPage" class="px-3 py-1 rounded hover:bg-blue-200">
+    <button *ngFor="let page of pageNumbers" (click)="goToPage(page)" [class.bg-blue-600]="page === currentPage"
+        [class.text-white]="page === currentPage" [class.bg-gray-200]="page !== currentPage"
+        class="px-3 py-1 rounded hover:bg-blue-200">
 
         {{ page }}
     </button>

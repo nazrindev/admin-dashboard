@@ -1,0 +1,22 @@
+<div class="super-admin-layout">
+    <aside class="sidebar">
+        <div class="admin-info">
+            <span>Super Admin: {{ adminName }}</span>
+        </div>
+
+        <nav class="nav-list">
+            <a routerLink="/super-admin/dashboard" routerLinkActive="active">Dashboard</a>
+            <a routerLink="/super-admin/merchants" routerLinkActive="active">Merchants</a>
+            <a routerLink="/super-admin/stores" routerLinkActive="active">All Stores</a>
+            <a routerLink="/super-admin/approvals" routerLinkActive="active">Approvals</a>
+            <a routerLink="/super-admin/analytics" routerLinkActive="active">Analytics</a>
+            <a routerLink="/super-admin/settings" routerLinkActive="active">Settings</a>
+        </nav>
+
+        <button class="logout-btn" (click)="logout()">Logout</button>
+    </aside>
+
+    <main class="content">
+        <router-outlet></router-outlet>
+    </main>
+</div>

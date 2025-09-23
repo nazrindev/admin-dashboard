@@ -7,15 +7,22 @@ import { environment } from '../../environment';
 export class ProductService {
   constructor(private http: HttpClient) {}
 
-  getProducts(merchantId: string): Observable<any> {
-    return this.http.get<any>(
-      `${environment.apiUrl}/api/merchant/${merchantId}/products`
-    );
+  getProducts(
+    merchantId: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string
+  ): Observable<any> {
+    let url = `${environment.apiUrl}/api/merchant/${merchantId}/products?page=${page}&limit=${limit}`;
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+    return this.http.get<any>(url);
   }
 
   createProduct(merchantId: string, payload: any): Observable<any> {
     return this.http.post<any>(
-      `${environment.apiUrl}/api/merchant/${merchantId}/products`,
+      `${environment.apiUrl}/api/product/create`,
       payload
     );
   }
@@ -23,7 +30,7 @@ export class ProductService {
   // Updated per API_README: /api/product/{productId}
   updateProduct(productId: string, payload: any): Observable<any> {
     return this.http.put<any>(
-      `${environment.apiUrl}/api/product/${productId}`,
+      `${environment.apiUrl}/api/product/update/${productId}`,
       payload
     );
   }
@@ -39,7 +46,7 @@ export class ProductService {
   // Updated per API_README: /api/product/{productId}
   deleteProduct(productId: string): Observable<any> {
     return this.http.delete<any>(
-      `${environment.apiUrl}/api/product/${productId}`
+      `${environment.apiUrl}/api/product/delete/${productId}`
     );
   }
 }

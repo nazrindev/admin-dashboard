@@ -1,2 +1,199 @@
-<h2>Settings</h2>
-<p>This is the Settings management page.</p> 
+<div class="store-settings-container">
+
+
+    <!-- Success/Error Messages -->
+    <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <h2>Store Settings</h2>
+        <p class="page-description">Manage your store information, images, and settings</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading store details...</p>
+    </div>
+
+    <!-- Store Settings Form -->
+    <div *ngIf="!loading" class="settings-content">
+        <form [formGroup]="storeForm" (ngSubmit)="onSubmit()" class="store-form">
+
+            <!-- Store Images Section -->
+            <div class="form-section">
+                <h3>Store Images</h3>
+
+                <!-- Cover Image -->
+                <div class="image-upload-group">
+                    <label class="form-label">Store Cover Image</label>
+                    <div class="image-upload-container">
+                        <div class="image-preview" [class.has-image]="coverImagePreview">
+                            <img *ngIf="coverImagePreview" [src]="coverImagePreview" alt="Cover Image Preview" />
+                            <div *ngIf="!coverImagePreview" class="placeholder">
+                                <span>📷</span>
+                                <p>No cover image selected</p>
+                            </div>
+                            <button *ngIf="coverImagePreview" type="button" class="remove-image-btn"
+                                (click)="removeCoverImage()">
+                                ✕
+                            </button>
+                        </div>
+                        <div class="upload-controls">
+                            <input type="file" id="coverImage" accept="image/*" (change)="onCoverImageSelected($event)"
+                                class="file-input" />
+                            <label for="coverImage" class="upload-btn">
+                                Choose Cover Image
+                            </label>
+                            <p class="upload-hint">Recommended: 1200x400px, JPG or PNG</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo Image -->
+                <div class="image-upload-group">
+                    <label class="form-label">Store Logo</label>
+                    <div class="image-upload-container">
+                        <div class="image-preview logo-preview" [class.has-image]="logoImagePreview">
+                            <img *ngIf="logoImagePreview" [src]="logoImagePreview" alt="Logo Preview" />
+                            <div *ngIf="!logoImagePreview" class="placeholder">
+                                <span>🏪</span>
+                                <p>No logo selected</p>
+                            </div>
+                            <button *ngIf="logoImagePreview" type="button" class="remove-image-btn"
+                                (click)="removeLogoImage()">
+                                ✕
+                            </button>
+                        </div>
+                        <div class="upload-controls">
+                            <input type="file" id="logoImage" accept="image/*" (change)="onLogoImageSelected($event)"
+                                class="file-input" />
+                            <label for="logoImage" class="upload-btn">
+                                Choose Logo
+                            </label>
+                            <p class="upload-hint">Recommended: 200x200px, PNG with transparent background</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Information Section -->
+            <div class="form-section">
+                <h3>Basic Information</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="businessName">Business Name *</label>
+                        <input type="text" id="businessName" formControlName="businessName" class="form-input"
+                            placeholder="Enter your business name" />
+                        <div *ngIf="storeForm.get('businessName')?.invalid && storeForm.get('businessName')?.touched"
+                            class="error-message">
+                            Business name is required (minimum 2 characters)
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="type">Business Type</label>
+                        <select id="type" formControlName="type" class="form-select">
+                            <option value="">Select Business Type</option>
+                            <option value="retail">Retail Store</option>
+                            <option value="restaurant">Restaurant/Food</option>
+                            <option value="fashion">Fashion & Apparel</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="beauty">Beauty & Wellness</option>
+                            <option value="home">Home & Garden</option>
+                            <option value="automotive">Automotive</option>
+                            <option value="services">Services</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Store Description</label>
+                    <textarea id="description" formControlName="description" class="form-textarea"
+                        placeholder="Describe your store, products, and what makes you unique..." rows="4"></textarea>
+                    <div class="char-count">
+                        {{ storeForm.get('description')?.value?.length || 0 }}/500 characters
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <h3>Contact Information</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Phone Number</label>
+                        <input type="tel" id="phone" formControlName="phone" class="form-input"
+                            placeholder="+91 98765 43210" />
+                        <div *ngIf="storeForm.get('phone')?.invalid && storeForm.get('phone')?.touched"
+                            class="error-message">
+                            Please enter a valid phone number
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="address">Store Address</label>
+                    <textarea id="address" formControlName="address" class="form-textarea"
+                        placeholder="Enter your complete store address..." rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- Business Hours Section -->
+            <div class="form-section">
+                <h3>Business Hours</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="openTime">Opening Time</label>
+                        <input type="time" id="openTime" formControlName="openTime" class="form-input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="closeTime">Closing Time</label>
+                        <input type="time" id="closeTime" formControlName="closeTime" class="form-input" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Options Section -->
+            <div class="form-section">
+                <h3>Delivery Options</h3>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" formControlName="supportDelivery" class="checkbox-input" />
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-text">Support Home Delivery</span>
+                    </label>
+
+                    <label class="checkbox-label">
+                        <input type="checkbox" formControlName="sameDayDelivery" class="checkbox-input" />
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-text">Same Day Delivery Available</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" (click)="loadStoreDetails()" [disabled]="saving">
+                    Reset
+                </button>
+                <button type="submit" class="btn btn-primary" [disabled]="!storeForm.valid || saving">
+                    <span *ngIf="!saving">Save Settings</span>
+                    <span *ngIf="saving">Saving...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -12,6 +12,7 @@ import { UsersComponent } from './features/users/users.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { authGuard } from './guards/auth.guard';
 import { AccountComponent } from './features/account/account.component';
+import { superAdminRoutes } from './super-admin.routes';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -33,4 +34,5 @@ export const routes: Routes = [
       { path: 'account', component: AccountComponent },
     ],
   },
+  ...superAdminRoutes,
 ];
