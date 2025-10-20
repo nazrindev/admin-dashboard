@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { OrderService } from '../../services/order.service';
 import { AuthService, User } from '../../services/auth.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
@@ -10,7 +11,7 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
   templateUrl: './orders.component.html',
   styleUrls: ['./orders.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
 })
 export class OrdersComponent {
   orders: any[] = [];
@@ -74,7 +75,7 @@ export class OrdersComponent {
         next: () => {
           order.status = status;
         },
-        error: (err) => console.error('Failed to update status', err),
+        error: (err: any) => console.error('Failed to update status', err),
       });
   }
 

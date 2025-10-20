@@ -20,15 +20,15 @@ app.use(
 );
 
 require("dotenv").config();
-app.use("/merchant", merchantUser);
-app.use("/store", storeRoutes);
-app.use("/customer", customerRoutes);
+app.use("/api/merchant", merchantUser);
+app.use("/api/store", storeRoutes);
+app.use("/api/customer", customerRoutes);
 
-app.use("/category", categoryRoutes);
-app.use("/subcategory", subcategoryRoutes);
-app.use("/product", productRoutes);
-app.use("/order", orderRoutes);
-app.use("/cart", CartRoutes);
+app.use("/api/category", categoryRoutes);
+app.use("/api/subcategory", subcategoryRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/order", orderRoutes);
+app.use("/api/cart", CartRoutes);
 connectDB();
 
 app.listen(process.env.PORT, () => {

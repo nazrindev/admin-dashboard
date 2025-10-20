@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'app-pagination',
@@ -8,16 +8,12 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
   styleUrls: ['./pagination.component.scss'],
   imports: [CommonModule],
 })
-export class PaginationComponent implements OnInit {
+export class PaginationComponent {
   @Input() currentPage = 1;
   @Input() totalItems = 0;
   @Input() itemsPerPage = 10;
 
   @Output() pageChange = new EventEmitter<number>();
-
-  ngOnInit() {
-    // Component initialized
-  }
 
   get totalPages(): number {
     return Math.ceil(this.totalItems / this.itemsPerPage);

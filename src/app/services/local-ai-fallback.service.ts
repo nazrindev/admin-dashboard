@@ -7,136 +7,170 @@ import { ProductInfo } from './ai-form-fill.service';
 export class LocalAiFallbackService {
   constructor() {}
 
-  /**
-   * Extract basic product information from image filename and metadata
-   * This is a fallback when OpenAI is not available
-   */
   async extractFromImageFallback(
     imageFile: File
   ): Promise<{ success: boolean; data?: ProductInfo; error?: string }> {
     try {
+      // Extract basic information from filename
       const filename = imageFile.name.toLowerCase();
-      const productInfo: ProductInfo = {};
+      const extractedInfo = this.extractFromFilename(filename);
 
-      // Extract information from filename patterns
-      productInfo.productName = this.extractProductNameFromFilename(filename);
-      productInfo.color = this.extractColorFromFilename(filename);
-      productInfo.category = this.extractCategoryFromFilename(filename);
-      productInfo.brand = this.extractBrandFromFilename(filename);
-      productInfo.size = this.extractSizeFromFilename(filename);
-
-      // Generate a basic description
-      if (productInfo.productName) {
-        productInfo.description = `${productInfo.productName}${
-          productInfo.color ? ` in ${productInfo.color}` : ''
-        }${productInfo.brand ? ` by ${productInfo.brand}` : ''}`;
+      if (Object.keys(extractedInfo).length === 0) {
+        return {
+          success: false,
+          error: 'Could not extract product information from filename',
+        };
       }
 
-      return {
-        success: true,
-        data: productInfo,
-      };
+      return { success: true, data: extractedInfo };
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to extract information from image filename',
+        error: `Local analysis failed: ${error}`,
       };
     }
   }
 
-  private extractProductNameFromFilename(filename: string): string | undefined {
-    // Remove file extension and common prefixes
-    let name = filename.replace(/\.(jpg|jpeg|png|webp|gif)$/i, '');
-    name = name.replace(/^(img|image|photo|pic|product)[-_\s]*/i, '');
+  private extractFromFilename(filename: string): ProductInfo {
+    const info: ProductInfo = {};
 
-    // Replace common separators with spaces
-    name = name.replace(/[-_]/g, ' ');
+    // Remove file extension
+    const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
 
-    // Remove numbers that might be SKUs or IDs
-    name = name.replace(/\b\d{3,}\b/g, '');
-
-    // Capitalize words
-    name = name
-      .split(' ')
+    // Extract product name (capitalize first letter of each word)
+    const words = nameWithoutExt.split(/[-_\s]+/);
+    const productName = words
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-      .trim();
+      .join(' ');
 
-    return name.length > 2 ? name : undefined;
+    if (productName) {
+      info.productName = productName;
+    }
+
+    // Extract category based on keywords
+    const category = this.extractCategory(filename);
+    if (category) {
+      info.category = category;
+    }
+
+    // Extract brand based on common brand patterns
+    const brand = this.extractBrand(filename);
+    if (brand) {
+      info.brand = brand;
+    }
+
+    // Extract color based on common color names
+    const color = this.extractColor(filename);
+    if (color) {
+      info.color = color;
+    }
+
+    // Extract size based on common size patterns
+    const size = this.extractSize(filename);
+    if (size) {
+      info.size = size;
+    }
+
+    // Extract gender based on keywords
+    const gender = this.extractGender(filename);
+    if (gender) {
+      info.gender = gender;
+    }
+
+    // Extract material based on common materials
+    const material = this.extractMaterial(filename);
+    if (material) {
+      info.material = material;
+    }
+
+    // Extract occasion based on keywords
+    const occasion = this.extractOccasion(filename);
+    if (occasion) {
+      info.occasion = occasion;
+    }
+
+    // Generate tags based on extracted information
+    const tags = this.generateTags(info);
+    if (tags.length > 0) {
+      info.tags = tags.join(', ');
+    }
+
+    return info;
   }
 
-  private extractColorFromFilename(filename: string): string | undefined {
-    const colors = [
-      'red',
-      'blue',
-      'green',
-      'black',
-      'white',
-      'gray',
-      'grey',
-      'yellow',
-      'orange',
-      'purple',
-      'pink',
-      'brown',
-      'navy',
-      'beige',
-      'gold',
-      'silver',
-    ];
+  private extractCategory(filename: string): string | null {
+    const categories = {
+      clothing: [
+        'shirt',
+        'tshirt',
+        't-shirt',
+        'pants',
+        'jeans',
+        'dress',
+        'skirt',
+        'jacket',
+        'coat',
+        'hoodie',
+        'sweater',
+      ],
+      shoes: ['shoe', 'sneaker', 'boot', 'sandal', 'heel', 'loafer', 'oxford'],
+      accessories: [
+        'bag',
+        'handbag',
+        'purse',
+        'wallet',
+        'belt',
+        'watch',
+        'necklace',
+        'ring',
+        'bracelet',
+      ],
+      electronics: [
+        'phone',
+        'laptop',
+        'tablet',
+        'headphone',
+        'speaker',
+        'camera',
+      ],
+      home: ['chair', 'table', 'lamp', 'sofa', 'bed', 'desk', 'shelf'],
+    };
 
-    for (const color of colors) {
-      if (filename.includes(color)) {
-        return color.charAt(0).toUpperCase() + color.slice(1);
+    for (const [category, keywords] of Object.entries(categories)) {
+      if (keywords.some((keyword) => filename.includes(keyword))) {
+        return category.charAt(0).toUpperCase() + category.slice(1);
       }
     }
-    return undefined;
+
+    return null;
   }
 
-  private extractCategoryFromFilename(filename: string): string | undefined {
-    const categories = [
-      {
-        keywords: ['shirt', 'tshirt', 't-shirt', 'blouse', 'top'],
-        category: 'Clothing',
-      },
-      {
-        keywords: ['pants', 'jeans', 'trousers', 'shorts'],
-        category: 'Clothing',
-      },
-      { keywords: ['dress', 'skirt', 'gown'], category: 'Clothing' },
-      { keywords: ['shoe', 'sneaker', 'boot', 'sandal'], category: 'Shoes' },
-      { keywords: ['phone', 'mobile', 'smartphone'], category: 'Electronics' },
-      { keywords: ['laptop', 'computer', 'tablet'], category: 'Electronics' },
-      { keywords: ['watch', 'clock'], category: 'Accessories' },
-      {
-        keywords: ['bag', 'purse', 'backpack', 'wallet'],
-        category: 'Accessories',
-      },
-      { keywords: ['book', 'novel', 'magazine'], category: 'Books' },
-      { keywords: ['toy', 'game', 'doll'], category: 'Toys' },
-    ];
-
-    for (const cat of categories) {
-      if (cat.keywords.some((keyword) => filename.includes(keyword))) {
-        return cat.category;
-      }
-    }
-    return undefined;
-  }
-
-  private extractBrandFromFilename(filename: string): string | undefined {
+  private extractBrand(filename: string): string | null {
     const brands = [
       'nike',
       'adidas',
-      'apple',
-      'samsung',
-      'sony',
-      'canon',
+      'puma',
+      'reebok',
+      'converse',
+      'vans',
       'gucci',
       'prada',
+      'versace',
+      'armani',
+      'calvin',
+      'ralph',
+      'tommy',
+      'hugo',
+      'boss',
       'zara',
       'h&m',
       'uniqlo',
+      'apple',
+      'samsung',
+      'sony',
+      'lg',
+      'dell',
+      'hp',
     ];
 
     for (const brand of brands) {
@@ -144,15 +178,198 @@ export class LocalAiFallbackService {
         return brand.charAt(0).toUpperCase() + brand.slice(1);
       }
     }
-    return undefined;
+
+    return null;
   }
 
-  private extractSizeFromFilename(filename: string): string | undefined {
-    // Look for clothing sizes
-    const sizeMatch = filename.match(/\b(xs|s|m|l|xl|xxl|xxxl|\d+)\b/i);
-    if (sizeMatch) {
-      return sizeMatch[1].toUpperCase();
+  private extractColor(filename: string): string | null {
+    const colors = [
+      'black',
+      'white',
+      'red',
+      'blue',
+      'green',
+      'yellow',
+      'orange',
+      'purple',
+      'pink',
+      'brown',
+      'gray',
+      'grey',
+      'navy',
+      'beige',
+      'cream',
+      'maroon',
+      'burgundy',
+      'turquoise',
+      'coral',
+      'gold',
+      'silver',
+      'bronze',
+      'copper',
+    ];
+
+    for (const color of colors) {
+      if (filename.includes(color)) {
+        return color.charAt(0).toUpperCase() + color.slice(1);
+      }
     }
-    return undefined;
+
+    return null;
+  }
+
+  private extractSize(filename: string): string | null {
+    const sizes = [
+      'xs',
+      's',
+      'm',
+      'l',
+      'xl',
+      'xxl',
+      'xxxl',
+      'small',
+      'medium',
+      'large',
+      'extra-large',
+      '28',
+      '29',
+      '30',
+      '31',
+      '32',
+      '33',
+      '34',
+      '35',
+      '36',
+      '37',
+      '38',
+      '39',
+      '40',
+      '41',
+      '42',
+      '43',
+      '44',
+      '45',
+      '46',
+    ];
+
+    for (const size of sizes) {
+      if (filename.includes(size)) {
+        return size.toUpperCase();
+      }
+    }
+
+    return null;
+  }
+
+  private extractGender(filename: string): string | null {
+    if (
+      filename.includes('men') ||
+      filename.includes('male') ||
+      filename.includes('boy')
+    ) {
+      return 'Men';
+    }
+    if (
+      filename.includes('women') ||
+      filename.includes('female') ||
+      filename.includes('girl') ||
+      filename.includes('lady')
+    ) {
+      return 'Women';
+    }
+    if (filename.includes('unisex')) {
+      return 'Unisex';
+    }
+
+    return null;
+  }
+
+  private extractMaterial(filename: string): string | null {
+    const materials = [
+      'cotton',
+      'polyester',
+      'wool',
+      'silk',
+      'leather',
+      'denim',
+      'canvas',
+      'nylon',
+      'spandex',
+      'linen',
+      'cashmere',
+      'suede',
+      'rubber',
+      'plastic',
+      'metal',
+      'wood',
+      'glass',
+      'ceramic',
+    ];
+
+    for (const material of materials) {
+      if (filename.includes(material)) {
+        return material.charAt(0).toUpperCase() + material.slice(1);
+      }
+    }
+
+    return null;
+  }
+
+  private extractOccasion(filename: string): string | null {
+    if (filename.includes('casual') || filename.includes('everyday')) {
+      return 'Casual';
+    }
+    if (
+      filename.includes('formal') ||
+      filename.includes('business') ||
+      filename.includes('suit')
+    ) {
+      return 'Formal';
+    }
+    if (
+      filename.includes('sport') ||
+      filename.includes('athletic') ||
+      filename.includes('gym')
+    ) {
+      return 'Sports';
+    }
+    if (
+      filename.includes('party') ||
+      filename.includes('evening') ||
+      filename.includes('dressy')
+    ) {
+      return 'Party';
+    }
+
+    return null;
+  }
+
+  private generateTags(info: ProductInfo): string[] {
+    const tags: string[] = [];
+
+    if (info.productName) {
+      tags.push(info.productName.toLowerCase());
+    }
+    if (info.category) {
+      tags.push(info.category.toLowerCase());
+    }
+    if (info.brand) {
+      tags.push(info.brand.toLowerCase());
+    }
+    if (info.color) {
+      tags.push(info.color.toLowerCase());
+    }
+    if (info.gender) {
+      tags.push(info.gender.toLowerCase());
+    }
+    if (info.occasion) {
+      tags.push(info.occasion.toLowerCase());
+    }
+    if (info.material) {
+      tags.push(info.material.toLowerCase());
+    }
+
+    // Remove duplicates
+    return [...new Set(tags)];
   }
 }

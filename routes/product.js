@@ -10,6 +10,11 @@ const {
 } = require("../controller/product/fetch");
 const { updateProduct } = require("../controller/product/update");
 const { deleteProduct } = require("../controller/product/delete");
+const {
+  getInventory,
+  checkAvailability,
+  updateInventory,
+} = require("../controller/product/inventory");
 
 const upload = require("../middleware/upload");
 
@@ -31,5 +36,10 @@ router.put(
 router.delete("/delete/:id", authMiddleware, deleteProduct);
 router.get("/get/merchant/:merchantId", getMerchantProducts);
 router.get("/search", searchProduct);
+
+// Inventory management routes
+router.get("/:productId/inventory", authMiddleware, getInventory);
+router.post("/:productId/availability", checkAvailability);
+router.put("/:productId/inventory", authMiddleware, updateInventory);
 
 module.exports = router;

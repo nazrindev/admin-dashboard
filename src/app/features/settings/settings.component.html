@@ -76,6 +76,10 @@
                             <label for="logoImage" class="upload-btn">
                                 Choose Logo
                             </label>
+                            <button *ngIf="selectedLogoImage" type="button" (click)="updateLogoOnly()"
+                                [disabled]="saving" class="update-logo-btn">
+                                {{ saving ? 'Updating...' : 'Update Logo Only' }}
+                            </button>
                             <p class="upload-hint">Recommended: 200x200px, PNG with transparent background</p>
                         </div>
                     </div>

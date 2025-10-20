@@ -172,14 +172,42 @@ export class SettingsComponent implements OnInit {
     this.logoImagePreview = null;
   }
 
-  // Convert file to data URL like in products component
-  private convertFileToDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
+  // Method to update only the logo
+  async updateLogoOnly() {
+    if (!this.selectedLogoImage) {
+      this.setError('Please select a logo image first');
+      return;
+    }
+
+    if (!this.currentStore || !this.currentStore._id) {
+      this.setError('Store not found');
+      return;
+    }
+
+    this.saving = true;
+    const formData = new FormData();
+    formData.append('logo', this.selectedLogoImage);
+
+    console.log('Updating logo only:', {
+      storeId: this.currentStore._id,
+      logoFile: this.selectedLogoImage.name,
     });
+
+    this.storeService
+      .updateStoreWithFormData(this.currentStore._id, formData)
+      .subscribe({
+        next: (response) => {
+          this.setSuccess('Logo updated successfully!');
+          this.saving = false;
+          this.selectedLogoImage = null;
+          this.loadStoreDetails(); // Reload to get updated logo URL
+        },
+        error: (error) => {
+          console.error('Error updating logo:', error);
+          this.setError('Failed to update logo');
+          this.saving = false;
+        },
+      });
   }
 
   async onSubmit() {
@@ -191,50 +219,44 @@ export class SettingsComponent implements OnInit {
     this.saving = true;
     const formValue = this.storeForm.value;
 
-    // Prepare store data
-    const storeData: any = {
-      businessName: formValue.businessName,
-      description: formValue.description,
-      address: formValue.address,
-      phone: formValue.phone,
-      website: formValue.website,
-      type: formValue.type,
-      openTime: formValue.openTime,
-      closeTime: formValue.closeTime,
-      supportDelivery: formValue.supportDelivery,
-      sameDayDelivery: formValue.sameDayDelivery,
-      location: formValue.location,
-    };
+    // Create FormData to send files as actual files
+    const formData = new FormData();
 
-    // Handle image uploads - convert to data URLs like in products component
-    try {
-      if (this.selectedCoverImage) {
-        storeData.coverImage = await this.convertFileToDataUrl(
-          this.selectedCoverImage
-        );
-      } else if (this.currentStore?.coverImage) {
-        storeData.coverImage = this.currentStore.coverImage;
-      }
+    // Add all text fields
+    formData.append('businessName', formValue.businessName);
+    formData.append('description', formValue.description || '');
+    formData.append('address', formValue.address || '');
+    formData.append('phone', formValue.phone || '');
+    formData.append('website', formValue.website || '');
+    formData.append('type', formValue.type || '');
+    formData.append('openTime', formValue.openTime || '');
+    formData.append('closeTime', formValue.closeTime || '');
+    formData.append('supportDelivery', String(formValue.supportDelivery));
+    formData.append('sameDayDelivery', String(formValue.sameDayDelivery));
 
-      if (this.selectedLogoImage) {
-        storeData.logo = await this.convertFileToDataUrl(
-          this.selectedLogoImage
-        );
-      } else if (this.currentStore?.logo) {
-        storeData.logo = this.currentStore.logo;
-      }
-    } catch (error) {
-      console.error('Error processing images:', error);
-      this.setError('Error processing images');
-      this.saving = false;
-      return;
+    // Add location data as JSON string
+    if (formValue.location) {
+      formData.append('location', JSON.stringify(formValue.location));
     }
 
-    console.log(storeData);
+    // Add image files
+    if (this.selectedCoverImage) {
+      formData.append('coverImage', this.selectedCoverImage);
+    }
+    if (this.selectedLogoImage) {
+      formData.append('logo', this.selectedLogoImage);
+    }
+
+    console.log('Submitting store data with FormData:', {
+      businessName: formValue.businessName,
+      hasCoverImage: !!this.selectedCoverImage,
+      hasLogoImage: !!this.selectedLogoImage,
+    });
+
     if (this.currentStore && this.currentStore._id) {
       // Update existing store
       this.storeService
-        .updateStore(this.currentStore._id, storeData)
+        .updateStoreWithFormData(this.currentStore._id, formData)
         .subscribe({
           next: (response) => {
             this.setSuccess('Store settings updated successfully!');
@@ -252,7 +274,7 @@ export class SettingsComponent implements OnInit {
         });
     } else {
       // Create new store
-      this.storeService.createStore(storeData).subscribe({
+      this.storeService.createStoreWithFormData(formData).subscribe({
         next: (response) => {
           this.setSuccess('Store created successfully!');
           this.saving = false;

@@ -87,6 +87,79 @@
 							</div>
 						</div>
 
+						<!-- AI Analysis Buttons -->
+						<div class="flex gap-2 flex-wrap">
+							<button type="button" (click)="analyzeProductImageManually()"
+								class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+								[disabled]="isAnalyzingImage || (!selectedImages.length && !productForm.get('imageUrls')?.value)">
+								<span class="mr-2">✨</span> Analyze with AI
+							</button>
+						</div>
+
+						<!-- AI Analysis Loading -->
+						<div *ngIf="isAnalyzingImage" class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+							<div class="flex items-center">
+								<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+								<span class="text-blue-800 text-sm">AI analyzing image...</span>
+							</div>
+						</div>
+
+						<!-- AI Suggestions -->
+						<div *ngIf="showAiSuggestions && aiExtractedData"
+							class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+							<div class="flex justify-between items-center mb-3">
+								<h4 class="text-sm font-semibold text-green-900">✅ AI Analysis Complete - Fields
+									Auto-Filled</h4>
+								<div class="flex gap-2">
+									<button type="button" (click)="dismissAiSuggestions()"
+										class="px-2 py-1 text-xs font-medium rounded bg-gray-500 text-white hover:bg-gray-600">
+										×
+									</button>
+								</div>
+							</div>
+							<div class="grid grid-cols-2 gap-2 text-sm">
+								<div *ngIf="aiExtractedData.productName">
+									<span class="font-medium text-green-900">Name:</span>
+									<p class="text-green-800">{{ aiExtractedData.productName }}</p>
+								</div>
+								<div *ngIf="aiExtractedData.category">
+									<span class="font-medium text-green-900">Category:</span>
+									<p class="text-green-800">{{ aiExtractedData.category }}</p>
+								</div>
+								<div *ngIf="aiExtractedData.brand">
+									<span class="font-medium text-green-900">Brand:</span>
+									<p class="text-green-800">{{ aiExtractedData.brand }}</p>
+								</div>
+								<div *ngIf="aiExtractedData.color">
+									<span class="font-medium text-green-900">Colors:</span>
+									<p class="text-green-800">{{ aiExtractedData.color }}</p>
+								</div>
+								<div *ngIf="aiExtractedData.size">
+									<span class="font-medium text-green-900">Sizes:</span>
+									<p class="text-green-800">{{ aiExtractedData.size }}</p>
+								</div>
+								<div *ngIf="aiExtractedData.material">
+									<span class="font-medium text-green-900">Material:</span>
+									<p class="text-green-800">{{ aiExtractedData.material }}</p>
+								</div>
+								<div *ngIf="aiExtractedData.gender">
+									<span class="font-medium text-green-900">Gender:</span>
+									<p class="text-green-800">{{ aiExtractedData.gender }}</p>
+								</div>
+								<div *ngIf="aiExtractedData.occasion">
+									<span class="font-medium text-green-900">Occasion:</span>
+									<p class="text-green-800">{{ aiExtractedData.occasion }}</p>
+								</div>
+								<div *ngIf="aiExtractedData.tags">
+									<span class="font-medium text-green-900">Tags:</span>
+									<p class="text-green-800">{{ aiExtractedData.tags }}</p>
+								</div>
+							</div>
+							<div *ngIf="aiExtractedData.description" class="mt-2">
+								<span class="font-medium text-green-900">Description:</span>
+								<p class="text-green-800 text-sm">{{ aiExtractedData.description }}</p>
+							</div>
+						</div>
 					</div>
 
 					<!-- Basic Info Fields -->
@@ -102,17 +175,17 @@
 								<label class="block text-sm font-medium text-gray-700">Price *</label>
 								<div class="mt-1 relative rounded-md shadow-sm">
 									<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-										<span class="text-gray-500 sm:text-sm">$</span>
+										<span class="text-gray-500 sm:text-sm">₹</span>
 									</div>
 									<input type="number" formControlName="price" placeholder="0.00" step="0.01"
-										class="block w-full pl-7 px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200" />
+										class="block w-full pl-7 px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 text-gray-900 appearance-none" />
 								</div>
 							</div>
 
 							<div>
 								<label class="block text-sm font-medium text-gray-700">Stock *</label>
 								<input type="number" formControlName="stock" placeholder="Quantity"
-									class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 text-gray-900 placeholder-gray-500" />
+									class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 text-gray-900 placeholder-gray-500 appearance-none" />
 							</div>
 						</div>
 
@@ -288,16 +361,16 @@
 						<div class="text-sm text-gray-500">SKU: {{ product.sku || 'N/A' }}</div>
 					</td>
 					<td class="px-6 py-4 whitespace-nowrap">
-						<div class="text-sm text-gray-900">${{ product.price }}</div>
+						<div class="text-sm text-gray-900">₹ {{ product.price }}/-</div>
 					</td>
 					<td class="px-6 py-4 whitespace-nowrap">
 						<input type="number" [(ngModel)]="product.stock" (blur)="saveStock(product)"
-							class="w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-orange-500" />
+							class="w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-gray-900 appearance-none" />
 					</td>
 					<td class="px-6 py-4 whitespace-nowrap">
 						<label class="inline-flex items-center cursor-pointer">
 							<input type="checkbox" [(ngModel)]="product.isActive" (change)="saveActive(product)"
-								class="form-checkbox h-4 w-4 text-orange-600 transition duration-150 ease-in-out" />
+								class="form-checkbox h-4 w-4 text-orange-600 transition duration-150 ease-in-out bg-white status-checkbox" />
 							<span class="ml-2 text-sm text-gray-600">
 								{{ product.isActive ? 'Active' : 'Inactive' }}
 							</span>

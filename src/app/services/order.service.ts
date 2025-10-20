@@ -22,14 +22,19 @@ export class OrderService {
     );
   }
 
+  getOrderById(orderId: string, merchantId: string): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/api/order/${orderId}`, {
+      params: { merchantId },
+    });
+  }
+
   updateOrderStatus(
     orderId: string,
     merchantId: string,
     status: string
   ): Observable<any> {
-    return this.http.put<any>(
-      `${environment.apiUrl}/api/orders/${orderId}/status`,
-      { status, merchantId }
-    );
+    return this.http.put<any>(`${environment.apiUrl}/api/order/${orderId}`, {
+      status,
+    });
   }
 }

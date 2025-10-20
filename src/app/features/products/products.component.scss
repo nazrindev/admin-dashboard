@@ -522,3 +522,24 @@ a.active.settings-icon {
       transform: rotate(360deg);
     }
   }
+
+/* Hide number input spinners cross-browser and ensure white bg/text */
+input[type='number'] {
+  -moz-appearance: textfield; /* Firefox */
+  appearance: textfield; /* Standard */
+  background-color: #fff;
+  color: #111827; /* gray-900 */
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Ensure product status checkbox has a white background and orange accent */
+.status-checkbox {
+  background-color: #ffffff !important;
+  accent-color: #ea580c; /* Tailwind orange-600 */
+  border: 1px solid #d1d5db; /* gray-300 */
+}

@@ -126,14 +126,28 @@ const getProductById = async (req, res) => {
 
 const getMerchantProducts = async (req, res) => {
   const { merchantId } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const search = req.query.search || "";
+  const skip = (page - 1) * limit;
+
   try {
-    const product = await Product.aggregate([
-      {
-        $match: {
-          merchantId: new mongoose.Types.ObjectId(merchantId),
-          isActive: true,
-        },
-      },
+    // Build match criteria
+    const matchCriteria = {
+      merchantId: new mongoose.Types.ObjectId(merchantId),
+      isActive: true,
+    };
+
+    // Add search criteria if provided
+    if (search) {
+      matchCriteria.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const pipeline = [
+      { $match: matchCriteria },
       {
         $lookup: {
           from: "subcategories",
@@ -169,27 +183,56 @@ const getMerchantProducts = async (req, res) => {
       },
       {
         $project: {
+          _id: 1,
           name: 1,
           description: 1,
           price: 1,
           stock: 1,
           imageUrls: 1,
+          inventory: 1,
           subcategory: { _id: 1, name: 1 },
           category: { _id: 1, name: 1 },
-          store: { _id: 1, name: 1, address: 1, city: 1, state: 1 },
+          store: {
+            _id: 1,
+            name: 1,
+            businessName: 1,
+            address: 1,
+            city: 1,
+            state: 1,
+          },
         },
       },
-    ]);
+    ];
 
-    if (!product.length) {
-      return res.status(404).json({ message: "Product not found" });
-    }
+    // Get total count for pagination
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const countResult = await Product.aggregate(countPipeline);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
 
-    res.status(200).json({ message: "Products fetched successfully", product });
+    // Add pagination
+    pipeline.push({ $skip: skip }, { $limit: limit });
+
+    const products = await Product.aggregate(pipeline);
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      message: "Products fetched successfully",
+      products,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalProducts: total,
+        productsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    });
   } catch (error) {
+    console.error("Error fetching merchant products:", error);
     res
       .status(500)
-      .json({ message: "Failed to fetch product", error: error.message });
+      .json({ message: "Failed to fetch products", error: error.message });
   }
 };
 

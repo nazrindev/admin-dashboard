@@ -30,12 +30,13 @@
             <tbody>
                 <tr *ngFor="let o of paginatedOrders">
                     <td>#{{ o.orderNumber }}</td>
-                    <td>{{ o.customer?.name || 'Guest' }}</td>
+                    <td>{{ o.customer?.firstName }} {{ o.customer?.lastName }}</td>
                     <td>{{ o.createdAt | date:'medium' }}</td>
                     <td>{{ o.total | currency:'USD':'symbol':'1.0-0' }}</td>
                     <td><span class="badge badge--{{ o.status }}">{{ o.status }}</span></td>
                     <td>
                         <div class="row-actions">
+                            <a [routerLink]="['/orders', o._id]" class="btn btn-primary btn-sm">View Details</a>
                             <button (click)="updateStatus(o, 'pending')">Pending</button>
                             <button (click)="updateStatus(o, 'processing')">Processing</button>
                             <button (click)="updateStatus(o, 'shipped')">Shipped</button>

@@ -1,0 +1,211 @@
+<div class="inventory-container">
+    <div class="inventory-header">
+        <h1>Inventory Management</h1>
+        <p>Manage your product stock levels and inventory tracking</p>
+    </div>
+
+    <!-- Product Listing -->
+    <div class="product-listing">
+        <div class="listing-header">
+            <h2>Your Products</h2>
+            <div class="listing-controls">
+                <input type="text" placeholder="Search products..." [(ngModel)]="searchTerm" (input)="onSearchChange()"
+                    class="search-input">
+                <select [(ngModel)]="inventoryFilter" (change)="filterProducts()" class="filter-select">
+                    <option value="all">All Products</option>
+                    <option value="low-stock">Low Stock</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid">
+            <div *ngFor="let product of filteredProducts" class="product-card" (click)="selectProduct(product)">
+                <div class="product-image">
+                    <img *ngIf="product.imageUrls && product.imageUrls.length > 0" [src]="product.imageUrls[0]"
+                        [alt]="product.name" class="product-img">
+                    <div *ngIf="!product.imageUrls || product.imageUrls.length === 0" class="no-image">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21,15 16,10 5,21"></polyline>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-price">${{ product.price }}</p>
+
+                    <!-- Inventory Status -->
+                    <div class="inventory-status">
+                        <span class="status-badge" [class]="getInventoryStatusClass(product)">
+                            {{ getInventoryStatus(product) }}
+                        </span>
+                        <span class="stock-info">
+                            {{ getStockInfo(product) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="product-actions">
+                    <button class="btn btn-primary small" (click)="selectProduct(product); $event.stopPropagation()">
+                        Manage Inventory
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div *ngIf="totalPages > 1" class="pagination">
+            <div class="pagination-info">
+                Showing {{ (currentPage - 1) * productsPerPage + 1 }} to {{ Math.min(currentPage * productsPerPage,
+                totalProducts) }} of {{ totalProducts }} products
+            </div>
+            <div class="pagination-controls">
+                <button class="btn btn-secondary small" (click)="onPageChange(currentPage - 1)"
+                    [disabled]="currentPage === 1">
+                    Previous
+                </button>
+                <span class="page-numbers">
+                    <button *ngFor="let page of getPageNumbers()" class="page-btn" [class.active]="page === currentPage"
+                        (click)="onPageChange(page)">
+                        {{ page }}
+                    </button>
+                </span>
+                <button class="btn btn-secondary small" (click)="onPageChange(currentPage + 1)"
+                    [disabled]="currentPage === totalPages">
+                    Next
+                </button>
+            </div>
+        </div>
+
+        <!-- No Products Message -->
+        <div *ngIf="filteredProducts.length === 0" class="no-products">
+            <div class="no-products-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+                <h3>No Products Found</h3>
+                <p *ngIf="searchTerm || inventoryFilter !== 'all'">Try adjusting your search or filter criteria.</p>
+                <p *ngIf="!searchTerm && inventoryFilter === 'all'">You haven't created any products yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple Inventory Management Modal -->
+    <div *ngIf="selectedProduct" class="inventory-modal" (click)="closeModal($event)">
+        <div class="modal-content simple-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ selectedProduct.name }}</h2>
+                <button class="close-btn" (click)="closeModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Product Info -->
+                <div class="product-info">
+                    <div class="product-image">
+                        <img *ngIf="selectedProduct.imageUrls && selectedProduct.imageUrls.length > 0"
+                            [src]="selectedProduct.imageUrls[0]" [alt]="selectedProduct.name" class="product-img">
+                        <div *ngIf="!selectedProduct.imageUrls || selectedProduct.imageUrls.length === 0"
+                            class="no-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21,15 16,10 5,21"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3>{{ selectedProduct.name }}</h3>
+                        <p class="product-price">${{ selectedProduct.price }}</p>
+                    </div>
+                </div>
+
+                <!-- Simple Inventory Management -->
+                <div class="simple-inventory">
+                    <div class="inventory-header">
+                        <h3>Manage Size-based Inventory</h3>
+                    </div>
+
+                    <!-- Size-based Mode -->
+                    <div class="size-based-stock">
+                        <!-- Explanation -->
+                        <div class="inventory-explanation">
+                            <h4>How Size-based Inventory Works</h4>
+                            <p><strong>Example:</strong> You have 1 top total. Add sizes S, M, L. When someone buys size
+                                S, you have 2 sizes left (M, L) but your total stock is still 1. Only when all sizes are
+                                sold does your stock become 0.</p>
+                        </div>
+
+                        <!-- Size Selection -->
+                        <div class="size-selection">
+                            <h4>Select Available Sizes</h4>
+                            <div class="size-grid">
+                                <button *ngFor="let size of standardSizes" (click)="toggleSize(size)"
+                                    [class.selected]="isSizeSelected(size)" class="btn-size-select">
+                                    {{ size }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Stock Summary -->
+                        <div class="stock-summary">
+                            <div class="summary-item">
+                                <span class="summary-label">Selected Sizes:</span>
+                                <span class="summary-value">{{ selectedSizes.length }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Status:</span>
+                                <span class="summary-value">{{ selectedSizes.length > 0 ? 'In Stock' : 'Out of Stock'
+                                    }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Selected Sizes Display -->
+                        <div class="selected-sizes-display">
+                            <h4>Selected Sizes</h4>
+                            <div class="selected-sizes-list">
+                                <span *ngFor="let size of selectedSizes" class="selected-size-badge">
+                                    {{ size }}
+                                </span>
+                                <span *ngIf="selectedSizes.length === 0" class="no-sizes">
+                                    No sizes selected
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Alert -->
+                    <div class="low-stock-setting">
+                        <label>Alert when stock is below:</label>
+                        <input type="number" [(ngModel)]="lowStockThreshold" min="1" class="threshold-input">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button (click)="updateInventory()" class="btn btn-primary" [disabled]="loading">
+                        {{ loading ? 'Saving...' : 'Save Changes' }}
+                    </button>
+                    <button (click)="closeModal()" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+</div>

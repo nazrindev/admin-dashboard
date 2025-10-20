@@ -12,6 +12,7 @@ import { AuthService, User } from '../../services/auth.service';
 export class AdminLayoutComponent {
   currentUser$;
   storeName: string | null = null;
+  isMobileMenuOpen = false;
 
   constructor(private authService: AuthService, private router: Router) {
     this.currentUser$ = this.authService.currentUser$;
@@ -27,5 +28,13 @@ export class AdminLayoutComponent {
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu() {
+    this.isMobileMenuOpen = false;
   }
 }

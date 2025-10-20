@@ -12,6 +12,7 @@ import { AuthService, User } from '../../services/auth.service';
 export class SuperAdminLayoutComponent {
   currentUser$;
   adminName: string | null = null;
+  isMobileMenuOpen = false;
 
   constructor(private authService: AuthService, private router: Router) {
     this.currentUser$ = this.authService.currentUser$;
@@ -27,5 +28,13 @@ export class SuperAdminLayoutComponent {
   logout() {
     this.authService.logout();
     this.router.navigate(['/super-admin/login']);
+  }
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu() {
+    this.isMobileMenuOpen = false;
   }
 }

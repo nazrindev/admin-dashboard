@@ -58,10 +58,24 @@ export class StoreService {
     return this.http.post<Store>(`${this.apiUrl}/api/store`, storeData);
   }
 
+  createStoreWithFormData(formData: FormData): Observable<Store> {
+    return this.http.post<Store>(`${this.apiUrl}/api/store`, formData);
+  }
+
   updateStore(storeId: string, storeData: any): Observable<Store> {
     return this.http.put<Store>(
       `${this.apiUrl}/api/store/${storeId}`,
       storeData
+    );
+  }
+
+  updateStoreWithFormData(
+    storeId: string,
+    formData: FormData
+  ): Observable<Store> {
+    return this.http.put<Store>(
+      `${this.apiUrl}/api/store/${storeId}`,
+      formData
     );
   }
 
