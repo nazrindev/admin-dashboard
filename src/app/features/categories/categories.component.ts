@@ -1,7 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CategoryService, Category, Subcategory, CreateCategoryRequest, CreateSubcategoryRequest } from '../../services/category.service';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import {
+  CategoryService,
+  Category,
+  Subcategory,
+  CreateCategoryRequest,
+  CreateSubcategoryRequest,
+} from '../../services/category.service';
+import { StoreService, Store } from '../../services/store.service';
 
 @Component({
   selector: 'app-categories',
@@ -12,11 +25,11 @@ import { CategoryService, Category, Subcategory, CreateCategoryRequest, CreateSu
 export class CategoriesComponent implements OnInit {
   categories: Category[] = [];
   subcategories: Subcategory[] = [];
-  
+
   // Forms
   categoryForm: FormGroup;
   subcategoryForm: FormGroup;
-  
+
   // UI States
   showCategoryModal = false;
   showSubcategoryModal = false;
@@ -25,65 +38,69 @@ export class CategoriesComponent implements OnInit {
   selectedCategoryId: string | null = null;
   selectedCategory: Category | null = null;
   selectedSubcategory: Subcategory | null = null;
-  
+
   // Loading states
   isLoading = false;
   isSubmitting = false;
 
   constructor(
     private categoryService: CategoryService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private storeService: StoreService
   ) {
     this.categoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
-      isActive: [true]
+      isActive: [true],
     });
 
     this.subcategoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       categoryId: ['', Validators.required],
       description: [''],
-      isActive: [true]
+      isActive: [true],
     });
   }
 
   ngOnInit() {
     this.loadData();
+    // Optionally preload store for attaching storeId/storeSlug if needed in UI
   }
 
   loadData() {
     this.isLoading = true;
-    
+
     // Load categories and subcategories in parallel
     Promise.all([
       this.categoryService.getCategories().toPromise(),
-      this.categoryService.getSubcategories().toPromise()
-    ]).then(([categoriesRes, subcategoriesRes]) => {
-      this.categories = categoriesRes?.categories || [];
-      this.subcategories = subcategoriesRes?.subcategory || [];
-      this.isLoading = false;
-    }).catch(error => {
-      console.error('Error loading data:', error);
-      this.isLoading = false;
-    });
+      this.categoryService.getSubcategories().toPromise(),
+    ])
+      .then(([categoriesRes, subcategoriesRes]) => {
+        this.categories = categoriesRes?.categories || [];
+        this.subcategories = subcategoriesRes?.subcategory || [];
+        this.isLoading = false;
+      })
+      .catch((error) => {
+        console.error('Error loading data:', error);
+        this.isLoading = false;
+      });
   }
 
   // Category Methods
   openCategoryModal(category?: Category) {
     this.isEditingCategory = !!category;
     this.selectedCategory = category || null;
-    
+
     if (category) {
       this.categoryForm.patchValue({
         name: category.name,
         description: category.description || '',
-        isActive: category.isActive
+        isActive: category.isActive,
       });
     } else {
       this.categoryForm.reset({ isActive: true });
     }
-    
+
     this.showCategoryModal = true;
   }
 
@@ -100,9 +117,29 @@ export class CategoriesComponent implements OnInit {
     this.isSubmitting = true;
     const formData = this.categoryForm.value as CreateCategoryRequest;
 
-    const request = this.isEditingCategory && this.selectedCategory
-      ? this.categoryService.updateCategory(this.selectedCategory._id, formData)
-      : this.categoryService.createCategory(formData);
+    // Attach storeId/storeSlug if available from settings' current store convention
+    try {
+      const currentStoreRaw = localStorage.getItem('currentStore');
+      console.log(currentStoreRaw);
+      if (currentStoreRaw) {
+        const currentStore: Partial<Store> & { slug?: string } =
+          JSON.parse(currentStoreRaw);
+        if (currentStore && currentStore._id) {
+          formData.storeId = currentStore._id;
+        }
+        if ((currentStore as any)?.slug) {
+          formData.storeSlug = (currentStore as any).slug as string;
+        }
+      }
+    } catch {}
+
+    const request =
+      this.isEditingCategory && this.selectedCategory
+        ? this.categoryService.updateCategory(
+            this.selectedCategory._id,
+            formData
+          )
+        : this.categoryService.createCategory(formData);
 
     request.subscribe({
       next: (response) => {
@@ -114,7 +151,7 @@ export class CategoriesComponent implements OnInit {
       error: (error) => {
         console.error('Error saving category:', error);
         this.isSubmitting = false;
-      }
+      },
     });
   }
 
@@ -126,7 +163,7 @@ export class CategoriesComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting category:', error);
-        }
+        },
       });
     }
   }
@@ -135,21 +172,21 @@ export class CategoriesComponent implements OnInit {
   openSubcategoryModal(subcategory?: Subcategory, categoryId?: string) {
     this.isEditingSubcategory = !!subcategory;
     this.selectedSubcategory = subcategory || null;
-    
+
     if (subcategory) {
       this.subcategoryForm.patchValue({
         name: subcategory.name,
         categoryId: subcategory.categoryId,
         description: subcategory.description || '',
-        isActive: subcategory.isActive
+        isActive: subcategory.isActive,
       });
     } else {
-      this.subcategoryForm.reset({ 
+      this.subcategoryForm.reset({
         isActive: true,
-        categoryId: categoryId || ''
+        categoryId: categoryId || '',
       });
     }
-    
+
     this.showSubcategoryModal = true;
   }
 
@@ -166,9 +203,13 @@ export class CategoriesComponent implements OnInit {
     this.isSubmitting = true;
     const formData = this.subcategoryForm.value as CreateSubcategoryRequest;
 
-    const request = this.isEditingSubcategory && this.selectedSubcategory
-      ? this.categoryService.updateSubcategory(this.selectedSubcategory._id, formData)
-      : this.categoryService.createSubcategory(formData);
+    const request =
+      this.isEditingSubcategory && this.selectedSubcategory
+        ? this.categoryService.updateSubcategory(
+            this.selectedSubcategory._id,
+            formData
+          )
+        : this.categoryService.createSubcategory(formData);
 
     request.subscribe({
       next: (response) => {
@@ -180,7 +221,7 @@ export class CategoriesComponent implements OnInit {
       error: (error) => {
         console.error('Error saving subcategory:', error);
         this.isSubmitting = false;
-      }
+      },
     });
   }
 
@@ -192,22 +233,23 @@ export class CategoriesComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting subcategory:', error);
-        }
+        },
       });
     }
   }
 
   // Helper Methods
   getSubcategoriesForCategory(categoryId: string): Subcategory[] {
-    return this.subcategories.filter(sub => sub.categoryId === categoryId);
+    return this.subcategories.filter((sub) => sub.categoryId === categoryId);
   }
 
   getCategoryName(categoryId: string): string {
-    const category = this.categories.find(cat => cat._id === categoryId);
+    const category = this.categories.find((cat) => cat._id === categoryId);
     return category?.name || 'Unknown Category';
   }
 
   toggleCategorySelection(categoryId: string) {
-    this.selectedCategoryId = this.selectedCategoryId === categoryId ? null : categoryId;
+    this.selectedCategoryId =
+      this.selectedCategoryId === categoryId ? null : categoryId;
   }
-} 
+}

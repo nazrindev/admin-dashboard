@@ -431,7 +431,22 @@ export class ProductsComponent {
       formData.append('price', String(Number(formValue.price)));
       formData.append('stock', String(Number(formValue.stock)));
       formData.append('categoryId', formValue.categoryId || '');
-      formData.append('storeId', formValue.storeId || merchantId);
+
+      // Get store ID from localStorage
+      let storeId = formValue.storeId;
+      if (!storeId) {
+        try {
+          const currentStoreRaw = localStorage.getItem('currentStore');
+          if (currentStoreRaw) {
+            const currentStore = JSON.parse(currentStoreRaw);
+            storeId = currentStore._id;
+          }
+        } catch (error) {
+          console.error('Error parsing currentStore from localStorage:', error);
+        }
+      }
+      formData.append('storeId', storeId || merchantId);
+
       formData.append('isActive', String(!!formValue.isActive));
       // create search_code
       const search_code = this.generateUniqueSearchCode(formValue.name);

@@ -8,6 +8,7 @@ export interface User {
   email: string;
   name: string;
   // Add other user properties as needed
+  defaultStoreId?: string;
 }
 
 export interface LoginResponse {

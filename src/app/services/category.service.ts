@@ -26,6 +26,8 @@ export interface CreateCategoryRequest {
   name: string;
   description?: string;
   isActive?: boolean;
+  storeId?: string;
+  storeSlug?: string;
 }
 
 export interface CreateSubcategoryRequest {
@@ -62,14 +64,14 @@ export class CategoryService {
     data: Partial<CreateCategoryRequest>
   ): Observable<{ message: string; category: Category }> {
     return this.http.put<{ message: string; category: Category }>(
-      `${environment.apiUrl}/category/update/${id}`,
+      `${environment.apiUrl}/api/category/update/${id}`,
       data
     );
   }
 
   deleteCategory(id: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
-      `${environment.apiUrl}/category/delete/${id}`
+      `${environment.apiUrl}/api/category/delete/${id}`
     );
   }
 
