@@ -72,15 +72,15 @@
                 <div class="info-content">
                     <div class="info-item">
                         <label>Name:</label>
-                        <span>{{ order.customer?.name || 'N/A' }}</span>
+                        <span>{{ order.customer.name || 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <label>Email:</label>
-                        <span>{{ order.customer?.email || 'N/A' }}</span>
+                        <span>{{ order.customer.email || 'N/A' }}</span>
                     </div>
-                    <div class="info-item" *ngIf="order.customer?.phone">
+                    <div class="info-item" *ngIf="order.customer.phone">
                         <label>Phone:</label>
-                        <span>{{ order.customer?.phone }}</span>
+                        <span>{{ order.customer.phone }}</span>
                     </div>
                 </div>
             </div>
@@ -90,10 +90,10 @@
                 <h3>Shipping Address</h3>
                 <div class="info-content">
                     <div class="address-block">
-                        <p>{{ order.shippingAddress?.address || 'N/A' }}</p>
-                        <p>{{ order.shippingAddress?.city || 'N/A' }}, {{ order.shippingAddress?.state || 'N/A' }} {{
-                            order.shippingAddress?.zip || 'N/A' }}</p>
-                        <p>{{ order.shippingAddress?.country || 'N/A' }}</p>
+                        <p>{{ order.shippingAddress.address || 'N/A' }}</p>
+                        <p>{{ order.shippingAddress.city || 'N/A' }}, {{ order.shippingAddress.state || 'N/A' }} {{
+                            order.shippingAddress.zip || 'N/A' }}</p>
+                        <p>{{ order.shippingAddress.country || 'N/A' }}</p>
                     </div>
                 </div>
             </div>
