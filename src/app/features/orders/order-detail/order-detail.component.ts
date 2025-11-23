@@ -187,4 +187,29 @@ export class OrderDetailComponent implements OnInit {
       minute: '2-digit',
     });
   }
+
+  calculateSubtotal(): number {
+    if (!this.order || !this.order.items) return 0;
+    return this.order.items.reduce((sum, item) => {
+      return sum + (item.price * item.quantity);
+    }, 0);
+  }
+
+  calculateTax(): number {
+    const subtotal = this.calculateSubtotal();
+    // If totalAmount includes tax, calculate tax as difference
+    // Otherwise, assume 18% GST (common in India)
+    if (this.order && this.order.totalAmount) {
+      const tax = this.order.totalAmount - subtotal;
+      return tax > 0 ? tax : subtotal * 0.18;
+    }
+    return subtotal * 0.18; // 18% GST
+  }
+
+  getTotalAmount(): number {
+    if (this.order && this.order.totalAmount) {
+      return this.order.totalAmount;
+    }
+    return this.calculateSubtotal() + this.calculateTax();
+  }
 }

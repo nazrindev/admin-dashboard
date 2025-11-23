@@ -14,6 +14,7 @@ import { SettingsComponent } from './features/settings/settings.component';
 import { InventoryComponent } from './features/inventory/inventory.component';
 import { authGuard } from './guards/auth.guard';
 import { AccountComponent } from './features/account/account.component';
+import { SubscriptionsComponent } from './features/subscriptions/subscriptions.component';
 import { superAdminRoutes } from './super-admin.routes';
 
 export const routes: Routes = [
@@ -36,6 +37,7 @@ export const routes: Routes = [
       { path: 'users', component: UsersComponent },
       { path: 'settings', component: SettingsComponent },
       { path: 'account', component: AccountComponent },
+      { path: 'subscriptions', component: SubscriptionsComponent },
     ],
   },
   ...superAdminRoutes,

@@ -177,11 +177,11 @@
                     <div class="item-pricing">
                         <div class="price-per-unit">
                             <label>Price per unit:</label>
-                            <span class="price">${{ item.price }}</span>
+                            <span class="price">₹{{ item.price.toFixed(2) }}</span>
                         </div>
                         <div class="total-price">
                             <label>Total:</label>
-                            <span class="price">${{ (item.price * item.quantity).toFixed(2) }}</span>
+                            <span class="price">₹{{ (item.price * item.quantity).toFixed(2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -195,15 +195,15 @@
                 <div class="summary-content">
                     <div class="summary-item">
                         <label>Subtotal:</label>
-                        <span>${{ ((order.totalAmount || 0) * 0.9).toFixed(2) }}</span>
+                        <span>₹{{ calculateSubtotal().toFixed(2) }}</span>
                     </div>
                     <div class="summary-item">
                         <label>Tax:</label>
-                        <span>${{ ((order.totalAmount || 0) * 0.1).toFixed(2) }}</span>
+                        <span>₹{{ calculateTax().toFixed(2) }}</span>
                     </div>
                     <div class="summary-item total">
                         <label>Total Amount:</label>
-                        <span>${{ (order.totalAmount || 0).toFixed(2) }}</span>
+                        <span>₹{{ getTotalAmount().toFixed(2) }}</span>
                     </div>
                 </div>
             </div>

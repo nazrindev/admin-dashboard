@@ -8,6 +8,9 @@ export interface Store {
   merchantId: string;
   businessName: string;
   address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
   phone?: string;
   logo?: string;
   coverImage?: string; // Added for cover image
@@ -22,6 +25,9 @@ export interface Store {
   verified: boolean;
   featured: boolean;
   featuredExpiry?: string;
+  subscriptionAmount?: number; // Subscription amount from DB
+  subscriptionExpiry?: string; // Subscription expiry date
+  subscriptionStatus?: 'active' | 'expired' | 'none'; // Subscription status
   location?: {
     type: string;
     coordinates: number[];

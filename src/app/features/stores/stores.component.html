@@ -36,6 +36,13 @@
                         <span *ngIf="store.featured" class="badge featured" [class.expired]="isFeaturedExpired(store)">
                             {{ isFeaturedExpired(store) ? 'Featured (Expired)' : 'Featured' }}
                         </span>
+                        <!-- Subscription Badges -->
+                        <span *ngIf="hasSubscription(store) && isSubscriptionExpired(store)" class="badge subscription-expired">
+                            Subscription Expired
+                        </span>
+                        <span *ngIf="hasSubscription(store) && !isSubscriptionExpired(store)" class="badge subscription-active">
+                            Subscription Ends: {{ formatDate(store.subscriptionExpiry!) }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -68,6 +75,16 @@
                         {{ formatDate(store.featuredExpiry) }}
                     </span>
                 </div>
+                <!-- Subscription Info -->
+                <div *ngIf="hasSubscription(store)" class="detail-row subscription-info">
+                    <span class="label">Subscription:</span>
+                    <span class="value" [class.expired]="isSubscriptionExpired(store)">
+                        <span *ngIf="isSubscriptionExpired(store)">Expired</span>
+                        <span *ngIf="!isSubscriptionExpired(store)">
+                            Ends in {{ getDaysUntilExpiry(store) }} day(s)
+                        </span>
+                    </span>
+                </div>
             </div>
 
             <!-- Store Status Display -->
@@ -83,6 +100,18 @@
                     <small>Expires: {{ formatDate(store.featuredExpiry) }}</small>
                 </div>
             </div>
+
+            <!-- Subscription Renewal Section -->
+            <div *ngIf="hasSubscription(store)" class="subscription-renewal">
+                <div *ngIf="isSubscriptionExpired(store)" class="renewal-alert expired">
+                    <p>Your subscription has expired. Please renew to continue using premium features.</p>
+                    <button class="btn-renew" (click)="onRenewClick(store)">Click Here to Renew</button>
+                </div>
+                <div *ngIf="!isSubscriptionExpired(store)" class="renewal-alert active">
+                    <p>Subscription ends on {{ formatDate(store.subscriptionExpiry!) }}</p>
+                    <button class="btn-renew" (click)="onRenewClick(store)">Renew Now</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -91,6 +120,50 @@
         <div class="empty-icon">🏪</div>
         <h3>No stores found</h3>
         <p>You haven't created any stores yet.</p>
+    </div>
+</div>
+
+<!-- Invoice Modal -->
+<div *ngIf="showInvoiceModal && selectedStoreForRenewal" class="invoice-modal-overlay" (click)="closeInvoiceModal()">
+    <div class="invoice-modal-content" (click)="$event.stopPropagation()">
+        <div class="invoice-header">
+            <h3>Subscription Renewal Invoice</h3>
+            <button class="close-btn" (click)="closeInvoiceModal()">&times;</button>
+        </div>
+        <div class="invoice-body">
+            <div class="invoice-store-info">
+                <h4>{{ selectedStoreForRenewal.businessName }}</h4>
+                <p class="store-type">{{ selectedStoreForRenewal.type || 'General Store' }}</p>
+            </div>
+            <div class="invoice-details">
+                <div class="invoice-row">
+                    <span class="invoice-label">Subscription Plan:</span>
+                    <span class="invoice-value">Monthly Subscription</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Amount:</span>
+                    <span class="invoice-value amount">₹{{ selectedStoreForRenewal.subscriptionAmount }}</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Duration:</span>
+                    <span class="invoice-value">1 Month</span>
+                </div>
+                <div *ngIf="selectedStoreForRenewal.subscriptionExpiry" class="invoice-row">
+                    <span class="invoice-label">Current Expiry:</span>
+                    <span class="invoice-value">{{ formatDate(selectedStoreForRenewal.subscriptionExpiry) }}</span>
+                </div>
+            </div>
+            <div class="invoice-total">
+                <div class="total-row">
+                    <span class="total-label">Total Amount:</span>
+                    <span class="total-value">₹{{ selectedStoreForRenewal.subscriptionAmount }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="invoice-footer">
+            <button class="btn-cancel" (click)="closeInvoiceModal()">Cancel</button>
+            <button class="btn-proceed" (click)="proceedToPayment()">Proceed to Payment</button>
+        </div>
     </div>
 </div>
 

@@ -37,6 +37,9 @@ export class SettingsComponent implements OnInit {
       businessName: ['', [Validators.required, Validators.minLength(2)]],
       description: ['', [Validators.maxLength(500)]],
       address: [''],
+      city: [''],
+      state: [''],
+      pincode: [''],
       phone: [''], // Removed strict validation for now
       website: [''], // Removed strict validation for now
       type: [''],
@@ -117,6 +120,9 @@ export class SettingsComponent implements OnInit {
       businessName: store.businessName || '',
       description: store.description || '',
       address: store.address || '',
+      city: store.city || '',
+      state: store.state || '',
+      pincode: store.pincode || '',
       phone: store.phone || '',
       website: store.website || '',
       type: store.type || '',
@@ -226,6 +232,9 @@ export class SettingsComponent implements OnInit {
     formData.append('businessName', formValue.businessName);
     formData.append('description', formValue.description || '');
     formData.append('address', formValue.address || '');
+    formData.append('city', formValue.city || '');
+    formData.append('state', formValue.state || '');
+    formData.append('pincode', formValue.pincode || '');
     formData.append('phone', formValue.phone || '');
     formData.append('website', formValue.website || '');
     formData.append('type', formValue.type || '');

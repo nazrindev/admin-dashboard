@@ -37,4 +37,11 @@ export class OrderService {
       status,
     });
   }
+
+  markReadyToPickup(orderId: string, merchantId: string): Observable<any> {
+    return this.http.post<any>(
+      `${environment.apiUrl}/api/order/${orderId}/ready-to-pickup`,
+      {}
+    );
+  }
 }

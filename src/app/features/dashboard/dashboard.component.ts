@@ -223,7 +223,7 @@ export class DashboardComponent implements OnInit {
       datasets: [
         {
           data,
-          label: 'Monthly Sales ($)',
+          label: 'Monthly Sales (₹)',
           backgroundColor: [
             '#3b82f6',
             '#10b981',
@@ -275,7 +275,7 @@ export class DashboardComponent implements OnInit {
         beginAtZero: true,
         ticks: {
           callback: function (value) {
-            return '$' + value.toLocaleString();
+            return '₹' + value.toLocaleString();
           },
         },
       },

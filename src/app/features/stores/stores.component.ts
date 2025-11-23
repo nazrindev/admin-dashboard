@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { StoreService, Store } from '../../services/store.service';
 import { AuthService } from '../../services/auth.service';
 // Removed approval functionality - this is now in super admin panel
@@ -16,11 +17,14 @@ export class StoresComponent implements OnInit {
   loading = false;
   successMessage = '';
   errorMessage = '';
+  showInvoiceModal = false;
+  selectedStoreForRenewal: Store | null = null;
   // Removed approval modal - now handled in super admin panel
 
   constructor(
     private storeService: StoreService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -94,5 +98,49 @@ export class StoresComponent implements OnInit {
   isFeaturedExpired(store: Store): boolean {
     if (!store.featured || !store.featuredExpiry) return false;
     return new Date(store.featuredExpiry) < new Date();
+  }
+
+  // Subscription methods
+  hasSubscription(store: Store): boolean {
+    return store.subscriptionAmount !== undefined && store.subscriptionAmount !== null;
+  }
+
+  isSubscriptionExpired(store: Store): boolean {
+    if (!this.hasSubscription(store) || !store.subscriptionExpiry) return false;
+    return new Date(store.subscriptionExpiry) < new Date();
+  }
+
+  getSubscriptionStatus(store: Store): 'active' | 'expired' | 'none' {
+    if (!this.hasSubscription(store)) return 'none';
+    if (this.isSubscriptionExpired(store)) return 'expired';
+    return 'active';
+  }
+
+  getDaysUntilExpiry(store: Store): number | null {
+    if (!store.subscriptionExpiry) return null;
+    const expiryDate = new Date(store.subscriptionExpiry);
+    const today = new Date();
+    const diffTime = expiryDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
+  onRenewClick(store: Store): void {
+    this.selectedStoreForRenewal = store;
+    this.showInvoiceModal = true;
+  }
+
+  closeInvoiceModal(): void {
+    this.showInvoiceModal = false;
+    this.selectedStoreForRenewal = null;
+  }
+
+  proceedToPayment(): void {
+    if (this.selectedStoreForRenewal) {
+      const storeId = this.selectedStoreForRenewal._id;
+      this.closeInvoiceModal();
+      // Navigate to subscriptions page with storeId as query param
+      this.router.navigate(['/subscriptions'], { queryParams: { storeId, renew: 'true' } });
+    }
   }
 }

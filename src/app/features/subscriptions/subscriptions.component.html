@@ -1,0 +1,159 @@
+<div class="subscriptions-container">
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <h2>Subscriptions</h2>
+    <p class="page-description" *ngIf="!isRenewal">Manage your store subscriptions</p>
+    <p class="page-description renewal-notice" *ngIf="isRenewal">
+      Renewing subscription for <strong>{{ renewalStoreName || 'selected store' }}</strong>
+    </p>
+  </div>
+
+  <!-- Store Selection -->
+  <div *ngIf="stores.length > 0" class="store-selection">
+    <label for="store-select">Select Store:</label>
+    <select
+      id="store-select"
+      [(ngModel)]="selectedStoreId"
+      class="store-select"
+      [disabled]="processing"
+    >
+      <option [value]="null">Select a store</option>
+      <option
+        *ngFor="let store of stores"
+        [value]="store._id || store.id"
+      >
+        {{ store.businessName }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading subscriptions...</p>
+  </div>
+
+  <!-- Active Subscription Info -->
+  <div *ngIf="!loading && hasActiveSubscription() && selectedStoreId" class="active-subscription-info">
+    <div class="subscription-info-card">
+      <div class="info-header">
+        <h3>Active Subscription</h3>
+        <span class="status-badge status-active">Active</span>
+      </div>
+      <div class="info-content">
+        <p class="expiry-message">
+          Your subscription ends on
+          <strong>
+            {{
+              formatDate(
+                getActiveSubscriptionForStore(selectedStoreId)?.endDate ||
+                  getActiveSubscriptionForStore(selectedStoreId)?.expiryDate
+              )
+            }}
+          </strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subscribe Button -->
+  <div *ngIf="!loading && !hasActiveSubscription()" class="subscribe-section">
+    <div class="subscribe-card">
+      <h3>{{ isRenewal ? 'Renew Subscription' : 'Start Subscription' }}</h3>
+      <p class="subscribe-description">
+        {{ isRenewal ? 'Renew your subscription to continue using premium features' : 'Subscribe to unlock premium features for your store' }}
+      </p>
+      <button
+        class="btn-subscribe"
+        (click)="onSubscribe()"
+        [disabled]="processing || !selectedStoreId || stores.length === 0"
+      >
+        <span *ngIf="!processing">{{ isRenewal ? 'Renew Now' : 'Subscribe Now' }}</span>
+        <span *ngIf="processing">Processing...</span>
+      </button>
+      <p *ngIf="!selectedStoreId && stores.length > 0" class="warning-text">
+        Please select a store to subscribe
+      </p>
+      <p *ngIf="stores.length === 0" class="warning-text">
+        No stores available. Please create a store first.
+      </p>
+    </div>
+  </div>
+
+  <!-- Subscriptions List -->
+  <div *ngIf="!loading && subscriptions.length > 0" class="subscriptions-list">
+    <h3 class="section-title">Your Subscriptions</h3>
+    <div class="subscriptions-grid">
+      <div
+        *ngFor="let subscription of subscriptions"
+        class="subscription-card"
+        [class.active]="subscription.status === 'active'"
+      >
+        <div class="subscription-header">
+          <h4>Store Subscription</h4>
+          <span
+            class="status-badge"
+            [ngClass]="getStatusClass(subscription.status)"
+          >
+            {{ subscription.status | titlecase }}
+          </span>
+        </div>
+
+        <div class="subscription-details">
+          <div class="detail-row" *ngIf="subscription.plan">
+            <span class="label">Plan:</span>
+            <span class="value">{{ subscription.plan }}</span>
+          </div>
+          <div class="detail-row" *ngIf="subscription.amount">
+            <span class="label">Amount:</span>
+            <span class="value">₹{{ subscription.amount }}</span>
+          </div>
+          <div class="detail-row" *ngIf="subscription.startDate">
+            <span class="label">Start Date:</span>
+            <span class="value">{{ formatDate(subscription.startDate) }}</span>
+          </div>
+          <div class="detail-row" *ngIf="subscription.endDate || subscription.expiryDate">
+            <span class="label">End Date:</span>
+            <span class="value">
+              {{ formatDate(subscription.endDate || subscription.expiryDate) }}
+            </span>
+          </div>
+          <div class="detail-row" *ngIf="subscription.storeId">
+            <span class="label">Store ID:</span>
+            <span class="value">{{ subscription.storeId }}</span>
+          </div>
+        </div>
+
+        <div
+          *ngIf="subscription.status === 'active'"
+          class="subscription-footer"
+        >
+          <div class="active-indicator">
+            <span class="indicator-dot"></span>
+            <span>Active Subscription</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div
+    *ngIf="!loading && subscriptions.length === 0"
+    class="empty-state"
+  >
+    <div class="empty-icon">📦</div>
+    <h3>No subscriptions found</h3>
+    <p>You don't have any active subscriptions yet.</p>
+    <p class="empty-hint">Click "Subscribe Now" to get started.</p>
+  </div>
+</div>
+

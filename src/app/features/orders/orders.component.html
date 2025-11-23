@@ -1,6 +1,30 @@
 <div class="page-container">
     <h2 class="page-title">Orders</h2>
 
+    <!-- Success/Error Messages -->
+    <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-container">
+        <button 
+            [class.active]="activeTab === 'upcoming'" 
+            (click)="setActiveTab('upcoming')"
+            type="button">
+            Upcoming
+        </button>
+        <button 
+            [class.active]="activeTab === 'completed'" 
+            (click)="setActiveTab('completed')"
+            type="button">
+            Completed
+        </button>
+    </div>
+
     <div class="search-container">
         <select [(ngModel)]="statusFilter" (change)="applyFilters()">
             <option value="">All Statuses</option>
@@ -32,17 +56,19 @@
                     <td>#{{ o.orderNumber }}</td>
                     <td>{{ o.customer?.firstName }} {{ o.customer?.lastName }}</td>
                     <td>{{ o.createdAt | date:'medium' }}</td>
-                    <td>{{ o.total | currency:'USD':'symbol':'1.0-0' }}</td>
+                    <td>₹{{ (o.totalAmount || o.total || 0).toFixed(2) }}</td>
                     <td><span class="badge badge--{{ o.status }}">{{ o.status }}</span></td>
                     <td>
                         <div class="row-actions">
-                            <a [routerLink]="['/orders', o._id]" class="btn btn-primary btn-sm">View Details</a>
-                            <button (click)="updateStatus(o, 'pending')">Pending</button>
-                            <button (click)="updateStatus(o, 'processing')">Processing</button>
-                            <button (click)="updateStatus(o, 'shipped')">Shipped</button>
-                            <button (click)="updateStatus(o, 'delivered')">Delivered</button>
-                            <button (click)="updateStatus(o, 'cancelled')">Cancelled</button>
-                            <button (click)="updateStatus(o, 'returned')">Returned</button>
+                            <a [routerLink]="['/orders', o._id]" class="btn btn-primary btn-sm">View Order</a>
+                            <button 
+                                *ngIf="canMarkReadyToPickup(o)"
+                                (click)="markReadyToPickup(o)" 
+                                [disabled]="isProcessingOrder(o)"
+                                class="btn-ready-pickup">
+                                <span *ngIf="!isProcessingOrder(o)">Ready to Pickup</span>
+                                <span *ngIf="isProcessingOrder(o)">Processing...</span>
+                            </button>
                         </div>
                     </td>
                 </tr>

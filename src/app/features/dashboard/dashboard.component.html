@@ -23,7 +23,7 @@
       </div>
       <div class="stat-content">
         <h3>Total Revenue</h3>
-        <p>{{ (summary?.revenue || 0) | currency:'USD':'symbol':'1.0-0' }}</p>
+        <p>₹{{ (summary?.revenue || 0).toFixed(2) }}</p>
         <span class="stat-trend positive">&nbsp;</span>
       </div>
     </div>
@@ -100,7 +100,7 @@
             <div>#{{ o.orderNumber }}</div>
             <div>{{ o.customer?.name || 'Guest' }}</div>
             <div>{{ o.createdAt | date:'medium' }}</div>
-            <div>{{ o.total | currency:'USD':'symbol':'1.0-0' }}</div>
+            <div>₹{{ (o.total || 0).toFixed(2) }}</div>
             <div><span class="status {{ o.status }}">{{ o.status }}</span></div>
             <div><button class="action-btn view" (click)="onViewOrder(o)">View</button></div>
           </div>
